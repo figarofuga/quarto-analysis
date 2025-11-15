@@ -1,0 +1,11 @@
+[project]
+name = "quarto-analysis"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "jupyter>=1.1.1",
+    "pandas>=2.3.3",
+    "papermill>=2.6.0",
+    "radian>=0.6.15",
+    "seaborn>=0.13.2",
+]

@@ -1,0 +1,29 @@
+---
+title: "Untitled"
+format: html
+---
+
+```{r}
+library(data.table)
+library(survival)
+
+dat <- survival::kidney
+
+res <- survival::coxph(Surv(time, status) ~ age + sex + disease, data = dat)
+
+summary(res)
+
+```
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+tips = sns.load_dataset("tips")
+
+
+sns.relplot(data=tips, x="total_bill", y="tip")
+
+plt.show()
+```

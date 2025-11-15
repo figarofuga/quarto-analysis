@@ -83,18 +83,22 @@ done
 
 case ${WHAT} in
   all)
-    initialise_r "rmarkdown,languageserver,nx10/httpgd@v2.0.4"
-    initialise_uv "jupyter,papermill"
+    initialise_r "tinyplot,rmarkdown,languageserver,nx10/httpgd@v2.0.4"
+    initialise_uv "pandas,seaborn,jupyter,papermill"
     initialise_julia "IJulia"
     ;;
   r)
-    initialise_r "rmarkdown,languageserver,nx10/httpgd@v2.0.4"
+    initialise_r "tinyplot,rmarkdown,languageserver,nx10/httpgd@v2.0.4"
     ;;
   python)
-    initialise_uv "jupyter,papermill"
+    initialise_uv "pandas,seaborn,jupyter,papermill"
     ;;
   julia)
     initialise_julia "IJulia"
+    ;;
+  r_py)
+    initialise_r "tinyplot,rmarkdown,languageserver,nx10/httpgd@v2.0.4"
+    initialise_uv "radian,pandas,seaborn,jupyter,papermill"
     ;;
   *)
     echo "Unknown option for --what: ${WHAT}"
