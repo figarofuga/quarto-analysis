@@ -46,10 +46,13 @@ parameters::compare_parameters(fit_ols, fit_ols_rcs, keep = "treat")
 
 ```{r}
 library(parameters)
+library(highs)
 library(MatchIt)
+library(rootSolve)
 library(WeightIt)
 library(cobalt)
 library(marginaleffects)
+library(broom)
 
 mout <- MatchIt::matchit(
     treat ~ age + educ + race + married + nodegree + re74 + re75, 
@@ -136,7 +139,7 @@ tmle_fit <- tmle::tmle(Y = Y, A = A, W = W,
     gform = "A~age+educ+raceblack+racewhite+racehispan+married+nodegree+re74+re75", 
     cvQinit = TRUE)
 
-
+summary(tmle_fit)
 
 ```
 
@@ -195,12 +198,6 @@ a_tmle <- AIPW_tmle$
 
 library(reticulate)
 
-use_python(".venv/bin/python", required = TRUE)
-
-reticulate::py_require(c("pandas", "polars", "tableone", "marginaleffects", 
- "econml", "dowhy", "causal-learn", "matplotlib", "seaborn", "plotnine", "ipykernel", "jupyter"))
-
-conf <- reticulate::py_config()
 
 ```
 

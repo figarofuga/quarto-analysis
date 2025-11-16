@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 show_help() {
-  echo "Usage: $0 [--what/-w all|r|python|julia] [--force/-f] [--help/-h]"
+  echo "Usage: $0 [--what/-w all|r|python|julia|r_py] [--force/-f] [--help/-h]"
   echo "  --what/-w: Specify what to initialise (default: all)."
   echo "    all: Initialise R (renv), Python (uv), and Julia (project)."
   echo "    r: Initialise R (renv)."
@@ -83,22 +83,22 @@ done
 
 case ${WHAT} in
   all)
-    initialise_r "tinyplot,rmarkdown,languageserver,nx10/httpgd@v2.0.4"
-    initialise_uv "pandas,seaborn,jupyter,papermill"
+    initialise_r "AIPW,broom,cobalt,tidyverse,tidymodels,easystats,grf,highs,marginaleffects,MatchIt,modelsummary,rms,tmle,WeightIt,SuperLearner,skimr,reticulate,rootSolve,survival,languageserver,nx10/httpgd@v2.0.4"
+    initialise_uv "radian,jedi,pandas,polars,tableone,marginaleffects,econml,dowhy,causal-learn,matplotlib,seaborn,plotnine,ipykernel,jupyter,papermill"
     initialise_julia "IJulia"
     ;;
   r)
-    initialise_r "tinyplot,rmarkdown,languageserver,nx10/httpgd@v2.0.4"
+    initialise_r "AIPW,broom,cobalt,tidyverse,tidymodels,easystats,grf,highs,marginaleffects,MatchIt,modelsummary,rms,tmle,WeightIt,SuperLearner,skimr,reticulate,rootSolve,survival,languageserver,nx10/httpgd@v2.0.4"
     ;;
   python)
-    initialise_uv "pandas,seaborn,jupyter,papermill"
+    initialise_uv "radian,jedi,pandas,polars,tableone,marginaleffects,econml,dowhy,causal-learn,matplotlib,seaborn,plotnine,ipykernel,jupyter,papermill"
     ;;
   julia)
     initialise_julia "IJulia"
     ;;
   r_py)
-    initialise_r "tinyplot,rmarkdown,languageserver,nx10/httpgd@v2.0.4"
-    initialise_uv "radian,pandas,seaborn,jupyter,papermill"
+    initialise_r "AIPW,broom,cobalt,tidyverse,tidymodels,easystats,grf,highs,marginaleffects,MatchIt,modelsummary,rms,tmle,WeightIt,SuperLearner,skimr,reticulate,rootSolve,survival,languageserver,nx10/httpgd@v2.0.4"
+    initialise_uv "radian,jedi,pandas,polars,tableone,marginaleffects,econml,dowhy,causal-learn,matplotlib,seaborn,plotnine,ipykernel,jupyter,papermill"
     ;;
   *)
     echo "Unknown option for --what: ${WHAT}"

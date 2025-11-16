@@ -2,5 +2,17 @@
   "name": "My Workshop Setup",
   "image": "ghcr.io/mcanouil/quarto-codespaces:latest",
   "remoteUser": "vscode",
-  "postStartCommand": "bash ./init-env.sh --what r_py"
+  "postStartCommand": "bash ./init-env.sh --what r_py",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-toolsai.jupyter",
+        "ms-python.python",
+        "ms-python.vscode-python-envs",
+        "ms-python.vscode-pylance",
+        "REditorSupport.r",
+        "julialang.language-julia"
+      ]
+    }
+  }
 }
