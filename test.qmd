@@ -1,29 +1,255 @@
 ---
-title: "Untitled"
+title: "Causal inference"
 format: html
 ---
 
+# Introduction
+
+This is the first Quarto document of causal inference using machine learning such as Meta learner.
+
+## Methods
+
+The lalonde dataset is simultaneously RCT and observational study.
+We hypothesized that ATT in observational study is nearest ATE in RCT. 
+The estimate value in RCT is 800-900 dollars.
+
+by "https://causalinf.substack.com/p/lalonde-40-years-later-imbens-and"
+
+### import packages
+
+### read lalonde dataset
+
 ```{r}
-library(data.table)
-library(survival)
+library(MatchIt)
+lalonde_r <- MatchIt::lalonde
 
-dat <- survival::kidney
+```
 
-res <- survival::coxph(Surv(time, status) ~ age + sex + disease, data = dat)
+## regression model
 
-summary(res)
+```{r}
+library(parameters)
+library(rms)
+
+dd <- datadist(lalonde_r)
+options(datadist = "dd")
+
+fit_ols <- rms::ols(re78 ~ treat + age + educ + race + married + nodegree + re74 + re75, data = lalonde_r)
+
+fit_ols_rcs <- rms::ols(re78 ~ treat + rcs(age, 5) + educ + race + married + nodegree + rcs(re74, 5) + rcs(re75, 5), data = lalonde_r)
+
+parameters::compare_parameters(fit_ols, fit_ols_rcs, keep = "treat")
+
+```
+
+## Propensity score matching and weighting
+
+```{r}
+library(parameters)
+library(MatchIt)
+library(WeightIt)
+library(cobalt)
+library(marginaleffects)
+
+mout <- MatchIt::matchit(
+    treat ~ age + educ + race + married + nodegree + re74 + re75, 
+    data = lalonde_r, 
+    method = "cardinality", 
+    distance = "glm", 
+    estimand = "ATT"
+    )
+
+cobalt::bal.tab(mout)
+
+mdata <- MatchIt::match.data(mout)
+
+fit_match_pre <- lm(re78 ~ treat * (age + educ + race + married +
+                            nodegree + re74 + re75),
+          data = mdata,
+          weights = weights)
+
+
+fit_match <- avg_comparisons(fit_match_pre,
+                variables = "treat",
+                vcov = ~subclass)
+
+
+wout <- WeightIt::weightit(
+    treat ~ age + educ + race + married + nodegree + re74 + re75, 
+    data = lalonde_r, 
+    method = "ipt",
+    estimand = "ATT"
+)                
+
+cobalt::bal.tab(wout)
+
+
+fit_weight_pre <- lm_weightit(re78 ~ treat * (age + educ + race + married +
+                                     nodegree + re74 + re75),
+                   data = lalonde_r, weightit = wout)
+
+fit_weight <- avg_comparisons(fit_weight_pre,
+                variables = "treat")           
+
+
+modelbased::estimate_contrasts(
+    fit_weight_pre, 
+    contrast = "treat", 
+    estimate = "population"
+)      
+
+modelsummary::modelsummary(
+    list("PS match" = fit_match, 
+    "PS weight" = fit_weight)
+)
+
+```
+
+```{r}
+library(dplyr)
+library(grf)
+
+X <- model.matrix(~ age + educ + race + married + nodegree + re74 + re75 + 0, data = dplyr::select(lalonde_r, -re78, -treat))
+Y <- lalonde_r$re78
+W <- lalonde_r$treat
+
+fit_grf <- grf::causal_forest(X = X, Y = Y, W = W)
+
+grf::average_treatment_effect(fit_grf, target.sample = "overlap")
+
+```
+
+```{r}
+library(dplyr)
+library(tmle)
+
+W <- model.matrix(~ age + educ + race + married + nodegree + re74 + re75 + 0, data = dplyr::select(lalonde_r, -re78, -treat))
+
+Y <- lalonde_r$re78
+A <- lalonde_r$treat
+
+tmle_fit <- tmle::tmle(Y = Y, A = A, W = W, 
+    family = 'gaussian', 
+    Q.SL.library=c("SL.mean","SL.glm"),
+    g.SL.library=c("SL.mean","SL.glm"),
+    Qform = "Y~A+age+educ+raceblack+racehispan+racewhite+married+nodegree+re74+re75", 
+    gform = "A~age+educ+raceblack+racewhite+racehispan+married+nodegree+re74+re75", 
+    cvQinit = TRUE)
+
+
+
+```
+
+```{r}
+library(dplyr)
+library(AIPW)
+library(easystats)
+
+AIPW_SL <- AIPW$new(Y= lalonde_r$re78,
+                    A= lalonde_r$treat,
+                    W= subset(lalonde_r,select=c("age", "educ", "race", "married", "nodegree", "re74", "re75")), 
+                    Q.SL.library = c("SL.glm"),
+                    g.SL.library = c("SL.glm"),
+                    k_split = 5,
+                    verbose=TRUE)
+                
+  suppressWarnings({
+  AIPW_SL$fit()$summary(g.bound = 0.025)
+})
+
+
+  suppressWarnings({
+  AIPW_SL$stratified_fit()$summary(g.bound = 0.025)
+})
+
+
+tmle_fit <- tmle::tmle(Y = Y, A = A, W = W, 
+    family = 'gaussian', 
+    Q.SL.library=c("SL.mean","SL.glm"),
+    g.SL.library=c("SL.mean","SL.glm"),
+    Qform = "Y~A+age+educ+raceblack+racehispan+racewhite+married+nodegree+re74+re75", 
+    gform = "A~age+educ+raceblack+racewhite+racehispan+married+nodegree+re74+re75", 
+    cvQinit = TRUE)
+
+
+cat("\nEstimates from TMLE\n")
+unlist(tmle_fit$estimates$ATE)
+unlist(tmle_fit$estimates$RR)
+unlist(tmle_fit$estimates$OR)
+
+cat("\nEstimates from AIPW\n")
+
+a_tmle <- AIPW_tmle$
+  new(
+    Y= lalonde_r$re78,
+    A= lalonde_r$treat,
+    tmle_fit = tmle_fit, 
+    verbose = TRUE)$
+  summary(g.bound=0.025)
+
+```
+
+
+
+```{r}
+
+library(reticulate)
+
+use_python(".venv/bin/python", required = TRUE)
+
+reticulate::py_require(c("pandas", "polars", "tableone", "marginaleffects", 
+ "econml", "dowhy", "causal-learn", "matplotlib", "seaborn", "plotnine", "ipykernel", "jupyter"))
+
+conf <- reticulate::py_config()
 
 ```
 
 ```{python}
+
 import pandas as pd
+import polars as pl
+import tableone
+import marginaleffects
+
+```
+
+```{r}
+library(MatchIt)
+lalonde_r <- MatchIt::lalonde
+```
+
+
+```{python}
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-tips = sns.load_dataset("tips")
+lalonde_py = r.lalonde_r
 
+lalonde_py.describe()
 
-sns.relplot(data=tips, x="total_bill", y="tip")
+sns.scatterplot(data = lalonde_py, x = 're74', y = 're78', hue = 'treat')
 
 plt.show()
+
 ```
+
+```{python}
+import statsmodels.formula.api as smf
+
+formu = 're78 ~ treat + age + educ + race + married + nodegree + re74 + re75'
+
+ols_fit = smf.ols(formula=formu, data = lalonde_py).fit()
+
+ols_fit.summary()
+
+
+```
+
+### read data
+
+```{python}
+rhc = pd.read_csv('rhc.csv')
+rhc.head()
+rhc.describe()
+```
+
