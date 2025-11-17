@@ -245,8 +245,8 @@ ols_fit.summary()
 ### read data
 
 ```{python}
-rhc = pd.read_csv('rhc.csv')
-rhc.head()
-rhc.describe()
+# rhc = pd.read_csv('rhc.csv')
+# rhc.head()
+# rhc.describe()
 ```
 
