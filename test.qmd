@@ -238,7 +238,25 @@ formu = 're78 ~ treat + age + educ + race + married + nodegree + re74 + re75'
 ols_fit = smf.ols(formula=formu, data = lalonde_py).fit()
 
 ols_fit.summary()
+```
 
+```{python}
+import pandas as pd
+import dowhy
+from dowhy import CausalModel
+
+lalonde_post = (pd.get_dummies(lalonde_py, 
+                         columns=["race"], dtype=int)          
+)
+
+model = CausalModel(
+    data=lalonde_post,
+    treatment="treat",
+    outcome="re78",
+    common_causes=["age", "educ", "married", "nodegree", "re74", "re75", "race_black", "race_hispan", "race_white"],
+    instruments=None)
+
+model.summary()
 
 ```
 
