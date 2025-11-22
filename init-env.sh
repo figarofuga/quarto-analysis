@@ -17,19 +17,36 @@ initialise_r() {
   
   echo "----------------------------------------------------------------"
   echo "Initializing R environment..."
+
+  # Linux用バイナリリポジトリの設定 (Posit Public Package Manager)
+  # これを設定するとコンパイル不要になり、インストールが高速かつ安定します
+  local R_REPO_SETUP="options(repos = c(PPM = 'https://packagemanager.posit.co/cran/__linux__/jammy/latest', CRAN = 'https://cloud.r-project.org'))"
   
-  # renv.lock があり、FORCEでないなら Restore
+  # 条件: renv.lock があり、FORCEでないなら Restore
   if [ "${FORCE}" = false ] && [ -f "renv.lock" ]; then
-    echo "Found renv.lock. Restoring environment..."
-    Rscript -e 'if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv"); renv::restore(prompt = FALSE)'
+    echo "Found renv.lock."
+    
+    # 重要: renvフォルダ構造(activate.Rなど)がない場合、scaffoldで足場を作成する
+    # これがないと .Rprofile から activate.R を呼べず環境が壊れた扱いになる
+    if [ ! -f "renv/activate.R" ]; then
+      echo "renv infrastructure missing. Scaffolding..."
+      Rscript -e "if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv'); renv::scaffold()"
+    fi
+
+    echo "Restoring environment from lockfile..."
+    # リポジトリ設定を適用しつつ restore を実行
+    Rscript -e "${R_REPO_SETUP}; if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv'); renv::restore(prompt = FALSE)"
+  
   else
     # 新規作成
     echo "Creating new R environment..."
     if [ -f ".Rprofile" ] && grep -q 'source("renv/activate.R")' .Rprofile; then
       sed -i '/source("renv\/activate.R")/d' .Rprofile
     fi
-    Rscript -e 'renv::init(bare = FALSE)'
-    Rscript -e "renv::install(c('${deps_vector}'))"
+    
+    # init -> install -> snapshot
+    Rscript -e "${R_REPO_SETUP}; renv::init(bare = FALSE)"
+    Rscript -e "${R_REPO_SETUP}; renv::install(c('${deps_vector}'))"
     Rscript -e 'renv::snapshot(type = "all", prompt = FALSE)'
   fi
 }
@@ -41,13 +58,11 @@ initialise_uv() {
   echo "----------------------------------------------------------------"
   echo "Initializing Python (uv) environment..."
 
-  # uv.lock があり、FORCEでないなら Sync (Restore)
   if [ "${FORCE}" = false ] && [ -f "uv.lock" ]; then
     echo "Found uv.lock. Syncing environment..."
     uv sync
     source .venv/bin/activate
   else
-    # 新規作成
     echo "Creating new Python environment..."
     if [ "${FORCE}" = true ]; then
       rm -rf .venv uv.lock pyproject.toml
@@ -69,8 +84,6 @@ initialise_julia() {
   echo "----------------------------------------------------------------"
   echo "Initializing Julia environment..."
 
-  # Project.toml があり、FORCEでないなら Instantiate (Restore)
-  # Manifest.toml があればバージョン完全固定で復元され、なければProject.tomlから解決されます
   if [ "${FORCE}" = false ] && [ -f "Project.toml" ]; then
     echo "Found Project.toml. Instantiating environment..."
     if [ -f "Manifest.toml" ]; then
@@ -79,16 +92,11 @@ initialise_julia() {
         echo "  (Manifest.toml NOT found: Resolving versions from Project.toml)"
     fi
     julia --project=. -e 'using Pkg; Pkg.instantiate()'
-  
   else
-    # 新規作成
     echo "Creating new Julia environment..."
-    # 強制モードの場合は既存の設定ファイルを削除してクリーンにする
     if [ "${FORCE}" = true ]; then
        rm -f Project.toml Manifest.toml
     fi
-    
-    # 現在のディレクトリでActivateし、パッケージを追加
     julia --project=. -e "using Pkg; Pkg.activate(\".\"); Pkg.add([\"${deps_vector}\"])"
   fi
 }
@@ -119,7 +127,7 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 # パッケージリスト定義
-R_PKGS="AIPW,broom,cobalt,tidyverse,tidymodels,easystats,grf,highs,marginaleffects,MatchIt,modelsummary,rms,tmle,WeightIt,SuperLearner,skimr,reticulate,rootSolve,survival,languageserver,nx10/httpgd@v2.0.4"
+R_PKGS="AIPW,broom,cobalt,tidyverse,tidymodels,easystats,grf,highs,marginaleffects,MatchIt,modelsummary,rms,tmle,WeightIt,SuperLearner,skimr,reticulate,rootSolve,survival,languageserver"
 PY_PKGS="radian,jedi,pandas,polars,tableone,marginaleffects,econml,dowhy,causal-learn,matplotlib,seaborn,plotnine,ipykernel,jupyter,papermill"
 JULIA_PKGS="IJulia"
 

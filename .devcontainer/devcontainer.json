@@ -2,7 +2,7 @@
   "name": "My Workshop Setup",
   "image": "ghcr.io/mcanouil/quarto-codespaces:latest",
   "remoteUser": "vscode",
-  "postCreateCommand": "bash ./init-env.sh --what r_py",
+  "postCreateCommand": "bash ./init-env.sh --what r_py --force",
   "customizations": {
     "vscode": {
       "extensions": [
