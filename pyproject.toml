@@ -1,0 +1,21 @@
+[project]
+name = "quarto-analysis"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "causal-learn>=0.1.4.3",
+    "dowhy>=0.14",
+    "econml>=0.16.0",
+    "ipykernel>=7.1.0",
+    "jedi>=0.19.2",
+    "jupyter>=1.1.1",
+    "marginaleffects>=0.2.2",
+    "matplotlib>=3.10.7",
+    "pandas>=2.3.3",
+    "papermill>=2.6.0",
+    "plotnine>=0.15.1",
+    "polars>=1.35.2",
+    "radian>=0.6.15",
+    "seaborn>=0.13.2",
+    "tableone>=0.9.5",
+]
