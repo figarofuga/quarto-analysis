@@ -13,46 +13,83 @@ show_help() {
 
 initialise_r() {
   local deps=$1
-  deps=$(echo "${deps}" | sed 's/,/","/g')
-  if [ "${FORCE}" = true ] || [ ! -f "renv.lock" ]; then
+  deps_vector=$(echo "${deps}" | sed 's/,/","/g')
+  
+  echo "----------------------------------------------------------------"
+  echo "Initializing R environment..."
+  
+  # renv.lock があり、FORCEでないなら Restore
+  if [ "${FORCE}" = false ] && [ -f "renv.lock" ]; then
+    echo "Found renv.lock. Restoring environment..."
+    Rscript -e 'if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv"); renv::restore(prompt = FALSE)'
+  else
+    # 新規作成
+    echo "Creating new R environment..."
     if [ -f ".Rprofile" ] && grep -q 'source("renv/activate.R")' .Rprofile; then
-      sed -i '' '/source("renv\/activate.R")/d' .Rprofile
+      sed -i '/source("renv\/activate.R")/d' .Rprofile
     fi
     Rscript -e 'renv::init(bare = FALSE)'
-    Rscript -e "renv::install(c('${deps}'))"
-    Rscript -e 'renv::snapshot(type = "all")'
-  fi
-}
-
-initialise_python() {
-  local deps=$1
-  deps=$(echo "${deps}" | sed 's/,/ /g')
-  if [ "${FORCE}" = true ] || [ ! -f "requirements.txt" ]; then
-    python3 -m venv .venv
-    source .venv/bin/activate
-    python3 -m pip install ${deps}
-    python3 -m pip freeze > requirements.txt
+    Rscript -e "renv::install(c('${deps_vector}'))"
+    Rscript -e 'renv::snapshot(type = "all", prompt = FALSE)'
   fi
 }
 
 initialise_uv() {
   local deps=$1
-  deps=$(echo "${deps}" | sed 's/,/ /g')
-  if [ "${FORCE}" = true ] || [ ! -f "uv.lock" ]; then
+  deps_space=$(echo "${deps}" | sed 's/,/ /g')
+
+  echo "----------------------------------------------------------------"
+  echo "Initializing Python (uv) environment..."
+
+  # uv.lock があり、FORCEでないなら Sync (Restore)
+  if [ "${FORCE}" = false ] && [ -f "uv.lock" ]; then
+    echo "Found uv.lock. Syncing environment..."
+    uv sync
+    source .venv/bin/activate
+  else
+    # 新規作成
+    echo "Creating new Python environment..."
+    if [ "${FORCE}" = true ]; then
+      rm -rf .venv uv.lock pyproject.toml
+    fi
     uv init --no-package --vcs none --bare --no-readme --author-from none
     uv venv
     source .venv/bin/activate
-    uv add ${deps}
+    if [ -n "${deps_space}" ]; then
+      uv add ${deps_space}
+    fi
     uv sync
   fi
 }
 
 initialise_julia() {
   local deps=$1
-  deps=$(echo "${deps}" | sed 's/,/","/g')
-  if [ "${FORCE}" = true ] || [ ! -f "Project.toml" ]; then
-    julia -e 'using Pkg; Pkg.activate("."); Pkg.instantiate()'
-    julia --project=. -e "using Pkg; Pkg.add([\"${deps}\"])"
+  deps_vector=$(echo "${deps}" | sed 's/,/","/g')
+
+  echo "----------------------------------------------------------------"
+  echo "Initializing Julia environment..."
+
+  # Project.toml があり、FORCEでないなら Instantiate (Restore)
+  # Manifest.toml があればバージョン完全固定で復元され、なければProject.tomlから解決されます
+  if [ "${FORCE}" = false ] && [ -f "Project.toml" ]; then
+    echo "Found Project.toml. Instantiating environment..."
+    if [ -f "Manifest.toml" ]; then
+        echo "  (Manifest.toml found: Restoring exact versions)"
+    else
+        echo "  (Manifest.toml NOT found: Resolving versions from Project.toml)"
+    fi
+    julia --project=. -e 'using Pkg; Pkg.instantiate()'
+  
+  else
+    # 新規作成
+    echo "Creating new Julia environment..."
+    # 強制モードの場合は既存の設定ファイルを削除してクリーンにする
+    if [ "${FORCE}" = true ]; then
+       rm -f Project.toml Manifest.toml
+    fi
+    
+    # 現在のディレクトリでActivateし、パッケージを追加
+    julia --project=. -e "using Pkg; Pkg.activate(\".\"); Pkg.add([\"${deps_vector}\"])"
   fi
 }
 
@@ -81,24 +118,29 @@ while [[ "$#" -gt 0 ]]; do
   shift
 done
 
+# パッケージリスト定義
+R_PKGS="AIPW,broom,cobalt,tidyverse,tidymodels,easystats,grf,highs,marginaleffects,MatchIt,modelsummary,rms,tmle,WeightIt,SuperLearner,skimr,reticulate,rootSolve,survival,languageserver,nx10/httpgd@v2.0.4"
+PY_PKGS="radian,jedi,pandas,polars,tableone,marginaleffects,econml,dowhy,causal-learn,matplotlib,seaborn,plotnine,ipykernel,jupyter,papermill"
+JULIA_PKGS="IJulia"
+
 case ${WHAT} in
   all)
-    initialise_r "AIPW,broom,cobalt,tidyverse,tidymodels,easystats,grf,highs,marginaleffects,MatchIt,modelsummary,rms,tmle,WeightIt,SuperLearner,skimr,reticulate,rootSolve,survival,languageserver,nx10/httpgd@v2.0.4"
-    initialise_uv "radian,jedi,pandas,polars,tableone,marginaleffects,econml,dowhy,causal-learn,matplotlib,seaborn,plotnine,ipykernel,jupyter,papermill"
-    initialise_julia "IJulia"
+    initialise_r "${R_PKGS}"
+    initialise_uv "${PY_PKGS}"
+    initialise_julia "${JULIA_PKGS}"
     ;;
   r)
-    initialise_r "AIPW,broom,cobalt,tidyverse,tidymodels,easystats,grf,highs,marginaleffects,MatchIt,modelsummary,rms,tmle,WeightIt,SuperLearner,skimr,reticulate,rootSolve,survival,languageserver,nx10/httpgd@v2.0.4"
+    initialise_r "${R_PKGS}"
     ;;
   python)
-    initialise_uv "radian,jedi,pandas,polars,tableone,marginaleffects,econml,dowhy,causal-learn,matplotlib,seaborn,plotnine,ipykernel,jupyter,papermill"
+    initialise_uv "${PY_PKGS}"
     ;;
   julia)
-    initialise_julia "IJulia"
+    initialise_julia "${JULIA_PKGS}"
     ;;
   r_py)
-    initialise_r "AIPW,broom,cobalt,tidyverse,tidymodels,easystats,grf,highs,marginaleffects,MatchIt,modelsummary,rms,tmle,WeightIt,SuperLearner,skimr,reticulate,rootSolve,survival,languageserver,nx10/httpgd@v2.0.4"
-    initialise_uv "radian,jedi,pandas,polars,tableone,marginaleffects,econml,dowhy,causal-learn,matplotlib,seaborn,plotnine,ipykernel,jupyter,papermill"
+    initialise_r "${R_PKGS}"
+    initialise_uv "${PY_PKGS}"
     ;;
   *)
     echo "Unknown option for --what: ${WHAT}"
