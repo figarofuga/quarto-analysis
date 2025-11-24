@@ -1,5 +1,5 @@
 {
-  "name": "Bayes All-Star Env (R, Py, Jl)",
+  "name": "Quarto analysis",
   "image": "ghcr.io/rocker-org/devcontainer/r-ver:4",
 
   "features": {
