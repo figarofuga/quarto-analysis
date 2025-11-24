@@ -1,0 +1,60 @@
+#!/bin/bash
+set -e
+
+# -----------------------------------------------------------------------------
+# 1. R Setup (CmdStan & brms)
+# -----------------------------------------------------------------------------
+
+echo ">>> 1. R Setup <<<"
+# CmdStanRのインストールとCmdStan本体のセットアップ
+# brms等のインストール (Linuxバイナリを使う設定になっているので高速です)
+Rscript -e "install.packages(c('reticulate', 'tidyverse', 'easystats', 'here', 'data.table', 'broom', 'MatchIt', 'WeightIt', 'cobalt', 'highs', 'rootSolve', 'rms', 'Hmisc', 'marginaleffects', 'grf', 'tmle', 'AIPW'))"
+
+# -----------------------------------------------------------------------------
+# 2. Python Setup (uv & PyMC/Bambi)
+# -----------------------------------------------------------------------------
+
+echo ">>> 2. Python Setup <<<"
+# uvのインストール
+# uv のインストール
+if ! command -v uv &> /dev/null; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    # このスクリプト内ですぐ使えるように一時的にsourceする
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
+
+# プロジェクトのセットアップ
+if [ -f "pyproject.toml" ]; then
+    echo "Found pyproject.toml. Syncing environment..."
+    uv sync
+else
+    echo "No pyproject.toml found. Initializing new environment..."
+    uv init --no-package --vcs none --bare
+    uv venv
+    
+    echo "Adding packages: ..."
+    uv add ipykernel jupyter pandas polars tableone marginaleffects econml dowhy causal-learn matplotlib seaborn plotnine papermill
+fi
+
+# 仮想環境のアクティベート
+source .venv/bin/activate
+
+
+# -----------------------------------------------------------------------------
+# 3. Julia Setup (Turing)
+# -----------------------------------------------------------------------------
+echo ">>> [Julia] Setting up Environment..."
+
+if [ -f "Project.toml" ]; then
+    echo "Found Project.toml. Instantiating environment..."
+    julia --project=. -e 'using Pkg; Pkg.instantiate()'
+else
+    echo "No Project.toml found. Adding packages..."
+    julia --project=. -e 'using Pkg; Pkg.add(["DataFrames", "DataFramesMeta", "Plots", "StatsModels", "StatsPlots", "IJulia"])'
+fi
+
+# IJuliaカーネル登録
+julia --project=. -e 'using IJulia; IJulia.installkernel("Julia")'
+
+echo ">>> Setup Complete! <<<"

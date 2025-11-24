@@ -1,6 +1,6 @@
 {
   "name": "Quarto analysis",
-  "image": "ghcr.io/rocker-org/devcontainer/r-ver:4",
+  "image": "ghcr.io/rocker-org/devcontainer/r-ver:4.4.3",
 
   "features": {
     // 1. システムパッケージ (StanやRのパッケージに必要)
