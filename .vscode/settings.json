@@ -3,5 +3,6 @@
     "r.alwaysUseActiveTerminal": true,
     "r.plot.useHttpgd": true,
     "r.rterm.linux": "${workspaceFolder}/.venv/bin/radian",
-    "r.rpath.linux": "/usr/local/bin/R"
+    "r.rpath.linux": "/usr/local/bin/R",
+    "r.plot.defaults.plotPreviewLayout": "multirow"
 }
