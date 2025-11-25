@@ -25,16 +25,22 @@ fi
 
 
 # プロジェクトのセットアップ
+
 if [ -f "pyproject.toml" ]; then
     echo "Found pyproject.toml. Syncing environment..."
+    
     uv sync
 else
     echo "No pyproject.toml found. Initializing new environment..."
     uv init --no-package --vcs none --bare
-    uv venv
     
-    echo "Adding packages: ..."
-    uv add ipykernel jupyter pandas polars tableone marginaleffects econml dowhy causal-learn matplotlib seaborn plotnine papermill radian jedi
+    # 【ここが修正ポイント】
+    # uvが独自にDLするPythonではなく、コンテナのPython(/usr/local/bin/python)を使う
+    echo "Creating virtual environment using System Python (shared library enabled)..."
+    uv venv --python $(which python)
+    
+    echo "Adding packages: pymc, bambi, arviz, jupyter, radian..."
+    uv add pymc arviz bambi jupyter pandas numpy matplotlib radian
 fi
 
 # 仮想環境のアクティベート
