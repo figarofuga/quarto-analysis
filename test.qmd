@@ -199,6 +199,7 @@ a_tmle <- AIPW_tmle$
 
 library(reticulate)
 
+reticulate::use_python(file.path(getwd(), ".venv", "bin", "python"))
 
 ```
 
