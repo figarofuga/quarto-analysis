@@ -8,7 +8,7 @@ set -e
 echo ">>> 1. R Setup <<<"
 # CmdStanRのインストールとCmdStan本体のセットアップ
 # brms等のインストール (Linuxバイナリを使う設定になっているので高速です)
-Rscript -e "install.packages(c('reticulate', 'tidyverse', 'easystats', 'here', 'data.table', 'broom', 'MatchIt', 'WeightIt', 'cobalt', 'highs', 'rootSolve', 'rms', 'Hmisc', 'marginaleffects', 'grf', 'tmle', 'AIPW'))"
+Rscript -e "install.packages(c('reticulate', 'tidyverse', 'easystats', 'here', 'data.table', 'modelsummary', 'broom', 'MatchIt', 'WeightIt', 'cobalt', 'highs', 'rootSolve', 'rms', 'Hmisc', 'marginaleffects', 'grf', 'tmle', 'AIPW'))"
 
 # -----------------------------------------------------------------------------
 # 2. Python Setup (uv & PyMC/Bambi)
@@ -34,12 +34,22 @@ else
     uv venv
     
     echo "Adding packages: ..."
-    uv add ipykernel jupyter pandas polars tableone marginaleffects econml dowhy causal-learn matplotlib seaborn plotnine papermill
+    uv add ipykernel jupyter pandas polars tableone marginaleffects econml dowhy causal-learn matplotlib seaborn plotnine papermill radian jedi
 fi
 
 # 仮想環境のアクティベート
 source .venv/bin/activate
 
+# -----------------------------------------------------------------------------
+# 【追加】Reticulate & Radian Configuration
+# -----------------------------------------------------------------------------
+echo "Configuring Reticulate and Radian..."
+
+# 1. .Rprofile に RETICULATE_PYTHON を設定
+# これにより、Rを起動した瞬間に uv の Python が認識されます
+if ! grep -q "RETICULATE_PYTHON" .Rprofile 2>/dev/null; then
+  echo 'Sys.setenv(RETICULATE_PYTHON = file.path(getwd(), ".venv", "bin", "python"))' >> .Rprofile
+fi
 
 # -----------------------------------------------------------------------------
 # 3. Julia Setup (Turing)
