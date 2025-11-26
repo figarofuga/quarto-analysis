@@ -259,13 +259,38 @@ model = CausalModel(
 
 model.summary()
 
+identified_estimand = model.identify_effect(proceed_when_unidentifiable=True)
+
+print(identified_estimand)
+
+causal_estimate = model.estimate_effect(identified_estimand,
+        method_name="backdoor.propensity_score_stratification")
+        
+print(causal_estimate)
+
+res_random=model.refute_estimate(identified_estimand, causal_estimate, method_name="random_common_cause", show_progress_bar=True)
+print(res_random)
+
 ```
 
 ### read data
 
 ```{python}
-# rhc = pd.read_csv('rhc.csv')
-# rhc.head()
-# rhc.describe()
+import pandas as pd
+import dowhy
+import numpy as np
+
+from dowhy import CausalModel
+import dowhy.datasets
+
+data = dowhy.datasets.linear_dataset(beta=10,
+        num_common_causes=5,
+        num_instruments = 2,
+        num_effect_modifiers=1,
+        num_samples=5000,
+        treatment_is_binary=True,
+        stddev_treatment_noise=10,
+        num_discrete_common_causes=1)
+df = data["df"]
 ```
 
