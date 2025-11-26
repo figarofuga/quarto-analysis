@@ -3,12 +3,16 @@ name = "quarto-analysis"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-    "arviz>=0.22.0",
-    "bambi>=0.16.0",
+    "causal-learn>=0.1.4.3",
+    "dowhy>=0.14",
+    "econml>=0.16.0",
+    "jedi>=0.19.2",
     "jupyter>=1.1.1",
+    "marginaleffects>=0.2.2",
     "matplotlib>=3.10.7",
     "numpy>=2.3.5",
     "pandas>=2.3.3",
-    "pymc>=5.26.1",
+    "polars>=1.35.2",
     "radian>=0.6.15",
+    "seaborn>=0.13.2",
 ]
