@@ -199,7 +199,7 @@ a_tmle <- AIPW_tmle$
 
 library(reticulate)
 
-reticulate::use_python(file.path(getwd(), ".venv", "bin", "python"))
+# reticulate::use_python(file.path(getwd(), ".venv", "bin", "python"))
 
 ```
 
@@ -207,7 +207,6 @@ reticulate::use_python(file.path(getwd(), ".venv", "bin", "python"))
 
 import pandas as pd
 import polars as pl
-import tableone
 import marginaleffects
 
 ```
