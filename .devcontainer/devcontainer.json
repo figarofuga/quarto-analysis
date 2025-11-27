@@ -17,8 +17,20 @@
     //   "version": "latest"
     // },
     // 4. Quarto
-    "ghcr.io/rocker-org/devcontainer-features/quarto-cli:1": {}
+    "ghcr.io/rocker-org/devcontainer-features/quarto-cli:1": {}, 
+    "ghcr.io/rocker-org/devcontainer-features/rstudio-server": {}
   },
+    "postAttachCommand": {
+        "rstudio-start": "rserver"
+    },
+    "forwardPorts": [
+        8787
+    ],
+    "portsAttributes": {
+        "8787": {
+            "label": "RStudio IDE"
+        }
+    },
 
   "customizations": {
     "vscode": {
