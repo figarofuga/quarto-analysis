@@ -37,8 +37,8 @@
       "extensions": [
         "REditorSupport.r",
         "ms-python.python",
-        // "julialang.language-julia",
-        "quarto.quarto"
+        "quarto.quarto",
+        "ms-toolsai.jupyter"
       ]
     }
   },
