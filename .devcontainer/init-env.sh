@@ -39,7 +39,7 @@ else
     uv venv --python /usr/bin/python3
     
     echo "Adding packages: jupyter, radian..."
-    uv add numpy jupyter pandas polars matplotlib seaborn marginaleffects econml causal-learn dowhy radian jedi
+    uv add numpy jupyter pandas polars matplotlib seaborn marginaleffects econml causal-learn dowhy radian jedi pygraphviz
 fi
 
 # 仮想環境のアクティベート
