@@ -251,16 +251,12 @@ lalonde_post = (pd.get_dummies(lalonde_py,
                          columns=["race"], dtype=int)          
 )
 
-import dowhy
-import networkx as nx
-from dowhy import CausalModel
-
-
 # 2. NetworkXでグラフを定義
 causal_graph = nx.DiGraph()
 # "age", "educ", "married", "nodegree", "re74", "re75", "race_black", "race_hispan", "race_white"
 # ノードとエッジを追加 (交絡構造: Age -> Exercise, Age -> Health)
 causal_graph.add_nodes_from(["treat", "age", "educ", "married", "nodegree", "re74", "re75", "race_black", "race_hispan", "race_white", "re78"])
+
 causal_graph.add_edges_from([
     ('treat', 're78'),
     ('re74', 're75'),
@@ -275,7 +271,19 @@ causal_graph.add_edges_from([
     ('re74', 'treat'),
     ('re75', 'treat'), 
     ('re75', 're78'), 
-    ('race_black', 're78')
+    ('race_black', 'treat'),
+    ('race_black', 're74'),
+    ('race_black', 're75'),
+    ('race_black', 're78'),
+    ('race_hispan', 'treat'),
+    ('race_hispan', 're74'),
+    ('race_hispan', 're75'),
+    ('race_hispan', 're78'),
+    ('race_white', 'treat'),
+    ('race_white', 're74'),
+    ('race_white', 're75'),
+    ('race_white', 're78')
+    
 ])
 
 # 3. NetworkXオブジェクトをGML文字列に変換
@@ -305,6 +313,7 @@ causal_estimate = model.estimate_effect(identified_estimand,
 print(causal_estimate)
 
 res_random=model.refute_estimate(identified_estimand, causal_estimate, method_name="random_common_cause", show_progress_bar=True)
+
 print(res_random)
 ```
 
@@ -312,20 +321,7 @@ print(res_random)
 
 ```{python}
 import pandas as pd
-import dowhy
-import numpy as np
+import econml
 
-from dowhy import CausalModel
-import dowhy.datasets
 
-data = dowhy.datasets.linear_dataset(beta=10,
-        num_common_causes=5,
-        num_instruments = 2,
-        num_effect_modifiers=1,
-        num_samples=5000,
-        treatment_is_binary=True,
-        stddev_treatment_noise=10,
-        num_discrete_common_causes=1)
-df = data["df"]
 ```
-

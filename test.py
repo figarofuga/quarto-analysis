@@ -41,7 +41,20 @@ causal_graph.add_edges_from([
     ('nodegree', 're78'),
     ('re74', 'treat'),
     ('re75', 'treat'), 
-    ('re75', 're78')
+    ('re75', 're78'), 
+    ('race_black', 'treat'),
+    ('race_black', 're74'),
+    ('race_black', 're75'),
+    ('race_black', 're78'),
+    ('race_hispan', 'treat'),
+    ('race_hispan', 're74'),
+    ('race_hispan', 're75'),
+    ('race_hispan', 're78'),
+    ('race_white', 'treat'),
+    ('race_white', 're74'),
+    ('race_white', 're75'),
+    ('race_white', 're78')
+    
 ])
 
 # 3. NetworkXオブジェクトをGML文字列に変換
@@ -81,3 +94,6 @@ print(causal_estimate)
 
 res_random=model.refute_estimate(identified_estimand, causal_estimate, method_name="random_common_cause", show_progress_bar=True)
 print(res_random)
+# %%
+
+import econml
