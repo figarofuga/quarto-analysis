@@ -96,4 +96,19 @@ res_random=model.refute_estimate(identified_estimand, causal_estimate, method_na
 print(res_random)
 # %%
 
-import econml
+from econml.dml import LinearDML
+
+est = LinearDML()
+
+X = lalonde.loc[:,["age", "married", "educ", "nodegree", "re74", "re75"]].to_numpy()
+
+est.fit(lalonde['re78'], 
+        lalonde['treat'], 
+        X=X
+        )
+point = est.effect(X, T0=0, T1=1)
+
+point = est.const_marginal_effect(X)
+lb, ub = est.const_marginal_effect_interval(X, alpha=0.05)
+
+# %%

@@ -209,11 +209,7 @@ import pandas as pd
 import polars as pl
 import marginaleffects
 
-```
-
-```{r}
-library(MatchIt)
-lalonde_r <- MatchIt::lalonde
+lalonde = pd.read_csv("rawdata/lalonde.csv")
 ```
 
 
@@ -247,7 +243,7 @@ import dowhy
 import networkx as nx
 from dowhy import CausalModel
 
-lalonde_post = (pd.get_dummies(lalonde_py, 
+lalonde_post = (pd.get_dummies(lalonde, 
                          columns=["race"], dtype=int)          
 )
 
@@ -321,7 +317,21 @@ print(res_random)
 
 ```{python}
 import pandas as pd
-import econml
+from econml.dml import LinearDML
 
+lalonde = pd.read_csv("rawdata/lalonde.csv")
+
+est = LinearDML()
+
+X = lalonde.loc[:,["age", "married", "educ", "nodegree", "re74", "re75"]].to_numpy()
+
+est.fit(lalonde['re78'], 
+        lalonde['treat'], 
+        X=X
+        )
+point = est.effect(X, T0=0, T1=1)
+
+point = est.const_marginal_effect(X)
+lb, ub = est.const_marginal_effect_interval(X, alpha=0.05)
 
 ```
