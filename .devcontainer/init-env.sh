@@ -8,7 +8,7 @@ set -e
 echo ">>> 1. R Setup <<<"
 # CmdStanRのインストールとCmdStan本体のセットアップ
 # brms等のインストール (Linuxバイナリを使う設定になっているので高速です)
-Rscript -e "install.packages(c('reticulate', 'tidyverse', 'easystats', 'mlr3', 'mlr3learners', 'here', 'data.table', 'modelsummary', 'broom', 'MatchIt', 'WeightIt', 'cobalt', 'highs', 'rootSolve', 'rms', 'Hmisc', 'marginaleffects', 'grf', 'tmle', 'AIPW', 'DoubleML'))"
+Rscript -e "install.packages(c('reticulate', 'tidyverse', 'tidymodels', 'censored', 'easystats', 'mlr3', 'mlr3learners', 'mlr3extralearners', 'mlr3proba', 'survivalmodels', 'here', 'data.table', 'modelsummary', 'broom', 'MatchIt', 'WeightIt', 'cobalt', 'highs', 'rootSolve', 'rms', 'Hmisc', 'marginaleffects', 'grf', 'tmle', 'AIPW', 'DoubleML', 'survival', 'flexsurv', 'survtmle'))"
 
 # -----------------------------------------------------------------------------
 # 2. Python Setup (uv & PyMC/Bambi)
@@ -39,7 +39,7 @@ else
     uv venv --python /usr/bin/python3
     
     echo "Adding packages: jupyter, radian..."
-    uv add numpy jupyter pandas polars matplotlib seaborn marginaleffects sklearn econml causal-learn dowhy radian jedi pygraphviz doubleml
+    uv add numpy jupyter pandas polars matplotlib seaborn marginaleffects sklearn econml causal-learn dowhy radian jedi pygraphviz doubleml scikit-survival
 fi
 
 # 仮想環境のアクティベート

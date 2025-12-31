@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "causal-learn>=0.1.4.3",
+    "doubleml>=0.11.1",
     "dowhy>=0.14",
     "econml>=0.16.0",
     "jedi>=0.19.2",
