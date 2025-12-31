@@ -335,3 +335,111 @@ point = est.const_marginal_effect(X)
 lb, ub = est.const_marginal_effect_interval(X, alpha=0.05)
 
 ```
+
+```{python}
+
+# Main imports
+from econml.metalearners import TLearner, SLearner, XLearner, DomainAdaptationLearner
+
+# Helper imports
+import numpy as np
+import pandas as pd
+from numpy.random import binomial, multivariate_normal, normal, uniform
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingRegressor
+from sklearn.model_selection import train_test_split
+
+lalonde = pd.read_csv("rawdata/lalonde.csv")
+
+lalonde_post = (pd.get_dummies(lalonde, 
+                         columns=["race"], dtype=int)          
+)
+
+X = lalonde_post.loc[:,["age", "married", "educ", "nodegree", "re74", "re75", "race_black", "race_hispan", "race_white"]]
+y = lalonde_post['re78']
+T = lalonde_post['treat']
+n = lalonde_post.shape[0]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, 
+    y, 
+    test_size=0.2, 
+    random_state=42, 
+    stratify=T
+    )
+
+T_train = T.loc[y_train.index]
+T_test = T.loc[y_test.index]
+
+# Instantiate T learner
+models = GradientBoostingRegressor(n_estimators=100, max_depth=6, min_samples_leaf=int(n/100))
+T_learner = TLearner(models=models)
+# Train T_learner
+T_learner.fit(y_train, T_train, X=X_train)
+# Estimate treatment effects on test data
+T_te = T_learner.effect(X_test)
+
+# Instantiate S learner
+overall_model = GradientBoostingRegressor(n_estimators=100, max_depth=6, min_samples_leaf=int(491/100))
+S_learner = SLearner(overall_model=overall_model)
+# Train S_learner
+S_learner.fit(y_train, T_train, X=X_train)
+# Estimate treatment effects on test data
+S_te = S_learner.effect(X_test)
+
+# Instantiate X learner
+models = GradientBoostingRegressor(n_estimators=100, max_depth=6, min_samples_leaf=int(n/100))
+propensity_model = RandomForestClassifier(n_estimators=100, max_depth=6,
+                                                  min_samples_leaf=int(n/100))
+X_learner = XLearner(models=models, propensity_model=propensity_model)
+# Train X_learner
+X_learner.fit(y_train, T_train, X=X_train)
+# Estimate treatment effects on test data
+X_te = X_learner.effect(X_test)
+
+# Instantiate Domain Adaptation learner
+models = GradientBoostingRegressor(n_estimators=100, max_depth=6, min_samples_leaf=int(n/100))
+final_models = GradientBoostingRegressor(n_estimators=100, max_depth=6, min_samples_leaf=int(n/100))
+propensity_model = RandomForestClassifier(n_estimators=100, max_depth=6,
+                                                  min_samples_leaf=int(n/100))
+DA_learner = DomainAdaptationLearner(models=models,
+                                     final_models=final_models,
+                                     propensity_model=propensity_model)
+# Train DA_learner
+DA_learner.fit(y_train, T_train, X=X_train)
+# Estimate treatment effects on test data
+DA_te = DA_learner.effect(X_test)
+
+# Instantiate Doubly Robust Learner
+from econml.dr import DRLearner
+outcome_model = GradientBoostingRegressor(n_estimators=100, max_depth=6, min_samples_leaf=int(n/100))
+pseudo_treatment_model = GradientBoostingRegressor(n_estimators=100, max_depth=6, min_samples_leaf=int(n/100))
+propensity_model = RandomForestClassifier(n_estimators=100, max_depth=6,
+                                                  min_samples_leaf=int(n/100))
+
+DR_learner = DRLearner(model_regression=outcome_model, model_propensity=propensity_model,
+                       model_final=pseudo_treatment_model, cv=5)
+# Train DR_learner
+DR_learner.fit(y, T, X=X)
+# Estimate treatment effects on test data
+DR_te = DR_learner.effect(X_test)
+
+```
+
+```{python}
+
+### Comparison plot of the different learners
+import matplotlib.pyplot as plt
+
+X_test_num = X_test.to_numpy()
+
+plt.figure(figsize=(7, 5))
+plt.scatter(X_test_num[:, 2], T_te, label="T-learner")
+plt.scatter(X_test_num[:, 2], S_te, label="S-learner")
+plt.scatter(X_test_num[:, 2], DA_te, label="DA-learner")
+plt.scatter(X_test_num[:, 2], X_te, label="X-learner")
+plt.scatter(X_test_num[:, 2], DR_te, label="DR-learner")
+plt.xlabel('education degree')
+plt.ylabel('Treatment Effect')
+plt.legend()
+plt.show()
+```

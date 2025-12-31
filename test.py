@@ -94,8 +94,8 @@ print(causal_estimate)
 
 res_random=model.refute_estimate(identified_estimand, causal_estimate, method_name="random_common_cause", show_progress_bar=True)
 print(res_random)
-# %%
 
+#%%
 from econml.dml import LinearDML
 
 est = LinearDML()
@@ -112,3 +112,4 @@ point = est.const_marginal_effect(X)
 lb, ub = est.const_marginal_effect_interval(X, alpha=0.05)
 
 # %%
+
