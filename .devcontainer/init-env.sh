@@ -2,7 +2,7 @@
 set -e
 
 # -----------------------------------------------------------------------------
-# 1. R Setup (CmdStan & brms)
+# 1. R Setup (causal inferences and machine learning)
 # -----------------------------------------------------------------------------
 
 echo ">>> 1. R Setup <<<"
@@ -39,7 +39,7 @@ else
     uv venv --python /usr/bin/python3
     
     echo "Adding packages: jupyter, radian..."
-    uv add numpy jupyter pandas polars matplotlib seaborn marginaleffects sklearn econml causal-learn causalml dowhy radian jedi pygraphviz doubleml scikit-survival
+    uv add numpy jupyter pandas polars matplotlib seaborn marginaleffects sklearn causallib econml causal-learn causalml dowhy radian jedi pygraphviz doubleml scikit-survival
 fi
 
 # 仮想環境のアクティベート
