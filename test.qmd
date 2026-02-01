@@ -325,8 +325,8 @@ outcome_spec <- rand_forest(trees = 500, mtry = 3, min_n = 10) |>
   set_engine("ranger") |>
   set_mode("regression")
 
-tau_spec <- rand_forest(trees = 800, mtry = 3, min_n = 10) |>
-  set_engine("ranger") |>
+tau_spec <- boost_tree(trees = 800, mtry = 3, min_n = 10) |>
+  set_engine("xgboost") |>
   set_mode("regression")
 
 prop_spec <- logistic_reg(penalty = 0.001, mixture = 1) |>

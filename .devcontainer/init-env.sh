@@ -8,7 +8,7 @@ set -e
 echo ">>> 1. R Setup <<<"
 # CmdStanRのインストールとCmdStan本体のセットアップ
 # brms等のインストール (Linuxバイナリを使う設定になっているので高速です)
-Rscript -e "install.packages(c('reticulate', 'tidyverse', 'tidymodels', 'ranger', 'censored', 'easystats', 'mlr3', 'mlr3learners', 'mlr3extralearners', 'mlr3proba', 'survivalmodels', 'here', 'data.table', 'modelsummary', 'broom', 'MatchIt', 'WeightIt', 'cobalt', 'highs', 'rootSolve', 'rms', 'Hmisc', 'marginaleffects', 'grf', 'SuperLearner', 'tmle', 'AIPW', 'DoubleML', 'survival', 'flexsurv', 'survtmle', 'ggdag', 'dagitty'))"
+Rscript -e "install.packages(c('reticulate', 'tidyverse', 'tidymodels', 'ranger', 'xgboost', 'censored', 'easystats', 'mlr3', 'mlr3learners', 'mlr3extralearners', 'mlr3proba', 'survivalmodels', 'here', 'data.table', 'modelsummary', 'broom', 'MatchIt', 'WeightIt', 'cobalt', 'highs', 'rootSolve', 'rms', 'Hmisc', 'marginaleffects', 'grf', 'SuperLearner', 'tmle', 'AIPW', 'DoubleML', 'survival', 'flexsurv', 'survtmle', 'ggdag', 'dagitty'))"
 
 # -----------------------------------------------------------------------------
 # 2. Python Setup (uv & PyMC/Bambi)
