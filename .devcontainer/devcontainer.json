@@ -5,7 +5,7 @@
   "features": {
     // 1. システムパッケージ (StanやRのパッケージに必要)
     "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
-      "packages": "libglpk-dev,libv8-dev,libcairo2-dev,libxt-dev,curl,wget,git,python3-dev,python3-venv,graphviz,libgraphviz-dev,pkg-config"
+      "packages": "fonts-noto-cjk,fonts-ipaexfont,libglpk-dev,libv8-dev,libcairo2-dev,libxt-dev,curl,wget,git,python3-dev,python3-venv,graphviz,libgraphviz-dev,pkg-config"
     },
     // 2. Python (uvを動かす土台)
     // "ghcr.io/devcontainers/features/python:1": {
@@ -17,8 +17,11 @@
     //   "version": "latest"
     // },
     // 4. Quarto
-    "ghcr.io/rocker-org/devcontainer-features/quarto-cli:1": {}, 
-    "ghcr.io/rocker-org/devcontainer-features/rstudio-server": {}
+    "ghcr.io/rocker-org/devcontainer-features/quarto-cli:1": {
+      "installTinyTex": true
+    }, 
+    "ghcr.io/rocker-org/devcontainer-features/rstudio-server": {} 
+    // "ghcr.io/michidk/devcontainers-features/typst:1": {}
   },
     "postAttachCommand": {
         "rstudio-start": "rserver"

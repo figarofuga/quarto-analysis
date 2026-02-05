@@ -1,5 +1,6 @@
 ---
-title: "Causal inference"
+title: "Habits"
+author: "John Doe"
 format: html
 ---
 
@@ -19,6 +20,7 @@ by "https://causalinf.substack.com/p/lalonde-40-years-later-imbens-and"
 
 
 ### read lalonde dataset
+
 
 ```{r}
 library(MatchIt)

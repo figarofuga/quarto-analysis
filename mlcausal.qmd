@@ -1,0 +1,63 @@
+---
+title: "Habits"
+author: "John Doe"
+format:
+  beamer:
+    pdf-engine: lualatex
+header-includes:
+  - \usepackage{luatexja}
+  - \usepackage{luatexja-fontspec}
+  - \setmainfont{Noto Sans}
+  - \setsansfont{Noto Sans}
+  - \setmonofont{Noto Sans Mono}
+  - \setmainjfont{Noto Sans CJK JP}
+  - \setsansjfont{Noto Sans CJK JP}
+---
+
+```{r}
+library(MatchIt)
+lalonde_r <- MatchIt::lalonde
+
+```
+
+
+## 因果関係
+
+- Turn off alarm
+- 日本語もいけるかな？
+
+## シンプルな回帰
+
+```{r}
+library(parameters)
+library(rms)
+
+dd <- datadist(lalonde_r)
+options(datadist = "dd")
+
+
+fit_ols_rcs <- rms::ols(re78 ~ treat + rcs(age, 5) + educ + race + married + nodegree + rcs(re74, 5) + rcs(re75, 5), data = lalonde_r)
+
+parameters::model_parameters(
+    fit_ols_rcs, keep = "treat"
+    )  |> 
+    print_md()
+
+```
+
+## 因果forest
+
+```{r}
+library(dplyr)
+library(grf)
+
+X <- model.matrix(~ age + educ + race + married + nodegree + re74 + re75 + 0, data = dplyr::select(lalonde_r, -re78, -treat))
+Y <- lalonde_r$re78
+W <- lalonde_r$treat
+
+fit_grf <- grf::causal_forest(X = X, Y = Y, W = W)
+
+grf::average_treatment_effect(fit_grf, target.sample = "overlap")
+
+```
+
