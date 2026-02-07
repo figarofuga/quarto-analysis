@@ -7,11 +7,11 @@ format:
 header-includes:
   - \usepackage{luatexja}
   - \usepackage{luatexja-fontspec}
-  - \setmainfont{Noto Sans}
-  - \setsansfont{Noto Sans}
+  - \setmainfont{TeX Gyre Termes}
+  - \setsansfont{TeX Gyre Heros}
   - \setmonofont{Noto Sans Mono}
-  - \setmainjfont{Noto Sans CJK JP}
-  - \setsansjfont{Noto Sans CJK JP}
+  - \setmainjfont{HaranoAjiMincho}
+  - \setsansjfont{HaranoAjiGothic}
 ---
 
 ```{r}
@@ -60,4 +60,3 @@ fit_grf <- grf::causal_forest(X = X, Y = Y, W = W)
 grf::average_treatment_effect(fit_grf, target.sample = "overlap")
 
 ```
-
