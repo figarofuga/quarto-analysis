@@ -1,6 +1,6 @@
 ---
-title: "Habits"
-author: "John Doe"
+title: "機械学習を用いた因果推論"
+author: "Nozomi Niimi"
 format:
   beamer:
     pdf-engine: lualatex
@@ -20,14 +20,33 @@ lalonde_r <- MatchIt::lalonde
 
 ```
 
+# 因果推論 at glance
 
 ## 因果関係
 
-- Turn off alarm
-- 日本語もいけるかな？
+- 医学研究の第一の目標と言っても過言ではない
+- Aの薬を使うと患者の予後は良くなるか？
+- 実際は口で言うほど簡単ではない
 
-## シンプルな回帰
+## 因果関係の考え方
 
+- 大きく分けて2つの考え方がある
+  - 潜在的アウトカムを考えるRubin流
+  - DAGを作り、do operatorを使うPearl流
+- 詳細は省くが、今回はPearl流のDAGを中心に考える
+
+## 通常の統計学的手法
+
+- 通常は交絡因子の調整により因果関係を推測する
+<!-- Todo: DAGを作る -->
+
+## 交絡因子の調整の方法
+
+- 回帰
+- Matching
+- 層別化
+
+## 例えば単純な回帰だと
 ```{r}
 library(parameters)
 library(rms)
@@ -44,6 +63,54 @@ parameters::model_parameters(
     print_md()
 
 ```
+
+## Matchingだと
+
+- 一番有名なのはPropensity score matching
+
+## ここらへんの問題
+
+- Misspecificationの問題
+- Estimandの問題 = 治療効果の異質性
+
+# 機械学習 at glance
+
+## 機械学習とは
+
+
+## 代表的な機械学習
+
+- Logistic回帰
+- tree-based model
+  - Random forest
+  - XGBoost
+- Neural network
+
+
+## 機械学習の強み
+
+## 疑問
+
+- 機械学習を用いて因果関係を推測出来るんじゃないか？
+
+## 機械学習を用いた因果推論のPros and Cons
+
+- Pros
+  - モデルのMisspecificationを避けられる
+  - 因果関係の異質性を柔軟に捉えられる
+- Cons
+  - Overfittingの問題
+  - 解釈が難しい時がある
+  - 信頼区間が出しにくい
+
+## 機械学習の因果推論における使い方
+
+- 交絡因子の調整で機械学習を用いる
+  - AIPW, tlmeなど
+- 因果をダイレクトに推論する学習機を作る
+  - Meta-learner
+- CATEを測定する
+  - Causal forestなど
 
 ## 因果forest
 
