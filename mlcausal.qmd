@@ -3,6 +3,9 @@ title: "機械学習を用いた因果推論"
 author: "Nozomi Niimi"
 format:
   beamer:
+    aspectratio: 169
+    colortheme: lily
+    theme: AnnArbor
     pdf-engine: lualatex
 header-includes:
   - \usepackage{luatexja}
