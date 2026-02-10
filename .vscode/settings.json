@@ -5,6 +5,9 @@
     "r.rterm.linux": "${workspaceFolder}/.venv/bin/radian",
     "r.rpath.linux": "/usr/local/bin/R",
     "r.plot.defaults.plotPreviewLayout": "multirow",
-    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python"
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "positron.assistant.enabledProviders": [
+    "openai-api"
+]
     
 }
