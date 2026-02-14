@@ -2,6 +2,44 @@
 
 # Required libraries
 import pandas as pd
+from causalml.propensity import LogisticRegressionPropensityModel
+from causalml.match import NearestNeighborMatch
+import pandas as pd
+import numpy as np
+
+
+lalonde_py = pd.read_csv("rawdata/lalonde.csv")
+# Assume X contains your features (covariates), 
+# y is the outcome variable (not used in PSM itself, but for effect estimation later),
+# and a is a binary indicator (0 or 1) for treatment assignment.
+# This data should be loaded into a pandas DataFrame or numpy array.
+
+# Example placeholder data
+X = lalonde_py[['age', 'educ', 'race', 'married', 'nodegree', 're74', 're75']] 
+a = lalonde_py['treat'] # 0 for control, 1 for treatment
+
+# 1. Estimate propensity scores
+# Use a Gradient Boosted Model to predict treatment assignment 'a' based on features 'X'
+from causalml.propensity import ElasticNetPropensityModel
+
+pm = ElasticNetPropensityModel(n_fold=5, random_state=42)
+ps = pm.fit_predict(X, a)
+
+from causalml.match import NearestNeighborMatch, create_table_one
+
+psm = NearestNeighborMatch(replace=False,
+                           ratio=1,
+                           random_state=42)
+matched = psm.match_by_group(data=lalonde_py,
+                             treatment_col='treat',
+                             score_cols=['propensity_score'],
+                             groupby_col=None)
+
+create_table_one(data=matched,
+                 treatment_col='treat',
+                 features=['age', 'educ', 'race', 'married', 'nodegree', 're74', 're75'])
+# Optional: Add propensity scores to your main DataFrame
+lalonde_py['propensity_score'] = propensity_scores
 
 
 # %%

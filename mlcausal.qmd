@@ -18,14 +18,25 @@ header-includes:
   - \setsansjfont{HaranoAjiGothic}
   - \usepackage{fancyvrb}
   - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+jupyter: python3
+
 ---
 
-```{r}
+<!-- ```{r}
 library(MatchIt)
 lalonde_r <- MatchIt::lalonde
 
 ```
+ -->
+ 
 
+```{python}
+
+import pandas as pd
+
+lalonde_py = pd.read_csv("rawdata/lalonde.csv")
+
+```
 # 因果推論 at glance
 
 ## 因果関係
@@ -53,89 +64,23 @@ lalonde_r <- MatchIt::lalonde
 - 層別化
 
 ## 例えば単純な回帰だと
-```{r}
-library(parameters)
-library(rms)
-
-dd <- datadist(lalonde_r)
-options(datadist = "dd")
+```{python}
+import pandas as pd
+import numpy as np
+import statsmodels.formula.api as smf
 
 
-fit_ols_rcs <- rms::ols(re78 ~ treat + rcs(age, 5) + educ + race + married + nodegree + rcs(re74, 5) + rcs(re75, 5), data = lalonde_r)
+fit_ols = smf.ols("re78 ~ treat + age + educ + race + married + nodegree + re74 + re75", data = lalonde_py)
 
-parameters::model_parameters(
-    fit_ols_rcs, keep = "treat"
-    )  |> 
-    print_md()
+res_ols = fit_ols.fit()
+
+res_ols.summary()
 
 ```
 
 ## Matchingだと
 
 - 一番有名なのはPropensity score matching
-
-## ここらへんの問題
-
-- Misspecificationの問題
-- Estimandの問題 = 治療効果の異質性
-
-# 機械学習 at glance
-
-## 機械学習とは
-
-
-## 代表的な機械学習
-
-- Logistic回帰
-- tree-based model
-  - Random forest
-  - XGBoost
-- Neural network
-
-
-## 機械学習の強み
-
-## 疑問
-
-- 機械学習を用いて因果関係を推測出来るんじゃないか？
-
-## 機械学習を用いた因果推論のPros and Cons
-
-- Pros
-  - モデルのMisspecificationを避けられる
-  - 因果関係の異質性を柔軟に捉えられる
-- Cons
-  - Overfittingの問題
-  - 解釈が難しい時がある
-  - 信頼区間が出しにくい
-
-## 機械学習の因果推論における使い方
-
-- 交絡因子の調整で機械学習を用いる
-  - AIPW, tlmeなど
-- 因果をダイレクトに推論する学習機を作る
-  - Meta-learner
-- CATEを測定する
-  - Causal forestなど
-
-## 因果forest
-
-```{r}
-library(dplyr)
-library(grf)
-
-X <- model.matrix(~ age + educ + race + married + nodegree + re74 + re75 + 0, data = dplyr::select(lalonde_r, -re78, -treat))
-Y <- lalonde_r$re78
-W <- lalonde_r$treat
-
-fit_grf <- grf::causal_forest(X = X, Y = Y, W = W)
-
-grf::average_treatment_effect(fit_grf, target.sample = "overlap")
-
-```
-
-
-## python 
 
 ```{python}
 import pandas as pd
@@ -206,7 +151,7 @@ identified_estimand = model.identify_effect(proceed_when_unidentifiable=True)
 print(identified_estimand)
 
 causal_estimate = model.estimate_effect(identified_estimand,
-        method_name="backdoor.propensity_score_stratification")
+        method_name="backdoor.propensity_score_matching")
         
 print(causal_estimate)
 
@@ -215,5 +160,70 @@ res_random=model.refute_estimate(identified_estimand, causal_estimate, method_na
 print(res_random)
 
 ```
+
+## ここらへんの問題
+
+- Misspecificationの問題
+- Estimandの問題 = 治療効果の異質性
+
+# 機械学習 at glance
+
+## 機械学習とは
+
+
+## 代表的な機械学習
+
+- Logistic回帰
+- tree-based model
+  - Random forest
+  - XGBoost
+- Neural network
+
+
+## 機械学習の強み
+
+## 疑問
+
+- 機械学習を用いて因果関係を推測出来るんじゃないか？
+
+## 機械学習を用いた因果推論のPros and Cons
+
+- Pros
+  - モデルのMisspecificationを避けられる
+  - 因果関係の異質性を柔軟に捉えられる
+- Cons
+  - Overfittingの問題
+  - 解釈が難しい時がある
+  - 信頼区間が出しにくい
+
+## 機械学習の因果推論における使い方
+
+- 交絡因子の調整で機械学習を用いる
+  - AIPW, tlmeなど
+- 因果をダイレクトに推論する学習機を作る
+  - Meta-learner
+- CATEを測定する
+  - Causal forestなど
+
+## 因果forest
+
+<!-- ```{r}
+library(dplyr)
+library(grf)
+
+X <- model.matrix(~ age + educ + race + married + nodegree + re74 + re75 + 0, data = dplyr::select(lalonde_r, -re78, -treat))
+Y <- lalonde_r$re78
+W <- lalonde_r$treat
+
+fit_grf <- grf::causal_forest(X = X, Y = Y, W = W)
+
+grf::average_treatment_effect(fit_grf, target.sample = "overlap")
+
+``` -->
+
+
+## python 
+
+
 
 
