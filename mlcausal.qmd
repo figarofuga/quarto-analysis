@@ -22,14 +22,6 @@ jupyter: python3
 
 ---
 
-<!-- ```{r}
-library(MatchIt)
-lalonde_r <- MatchIt::lalonde
-
-```
- -->
- 
-
 ```{python}
 
 import pandas as pd
@@ -63,7 +55,7 @@ lalonde_py = pd.read_csv("rawdata/lalonde.csv")
 - Matching
 - 層別化
 
-## 例えば単純な回帰だと
+## 例えば単純な回帰だと {.allowframebreaks .fragile}
 ```{python}
 import pandas as pd
 import numpy as np
@@ -74,13 +66,62 @@ fit_ols = smf.ols("re78 ~ treat + age + educ + race + married + nodegree + re74 
 
 res_ols = fit_ols.fit()
 
-res_ols.summary()
+pd.read_html(res_ols.summary2().as_html())[1]
 
 ```
 
 ## Matchingだと
 
 - 一番有名なのはPropensity score matching
+
+```{python}
+
+import numpy as np
+import pandas as pd
+
+from causalml.propensity import LogisticRegressionPropensityModel
+from causalml.match import NearestNeighborMatch
+
+lalonde_py["treat"] = T
+df["re78"] = Y
+
+# -----------------------
+# 2) Estimate propensity score with Logistic Regression
+# -----------------------
+ps_model = LogisticRegressionPropensityModel()  # sklearn LogisticRegression 기반 :contentReference[oaicite:1]{index=1}
+p_score = ps_model.fit_predict(lalonde_py[["age", "educ", "race", "married", "nodegree", "re74", "re75"]], lalonde_py["treat"])
+
+lalonde_py["propensity_score"] = p_score
+
+# -----------------------
+# 3) Propensity score matching (Nearest Neighbor)
+# -----------------------
+matcher = NearestNeighborMatch(
+    caliper=0.05,     # PS差がこの範囲以内のみマッチ (例) :contentReference[oaicite:2]{index=2}
+    replace=False,    # 置換なし
+    ratio=1,          # 1:1 matching
+    random_state=42
+)
+
+matched = matcher.match(
+    data=lalonde_py,
+    treatment_col="treat",
+    score_cols=["propensity_score"]  # ここにPS列名
+)
+
+print(matched.head())
+print("matched size:", matched.shape)
+
+# -----------------------
+# 4) Simple ATT estimate on matched sample (difference in means)
+# -----------------------
+att = matched.loc[matched["treatment"] == 1, "outcome"].mean() - matched.loc[matched["treatment"] == 0, "outcome"].mean()
+print("ATT (diff in means on matched sample):", att)
+
+```
+
+
+## DAGつき
 
 ```{python}
 import pandas as pd
