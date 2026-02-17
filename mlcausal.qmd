@@ -82,6 +82,27 @@ import pandas as pd
 from causalml.propensity import LogisticRegressionPropensityModel
 from causalml.match import NearestNeighborMatch
 
+# 既に列があるので不要
+# lalonde_py["treat"] = T
+# df["re78"] = Y
+
+X = pd.get_dummies(
+    lalonde_py[["age", "educ", "race", "married", "nodegree", "re74", "re75"]],
+    columns=["race"],
+    drop_first=True
+)
+p_score = ps_model.fit_predict(X, lalonde_py["treat"])
+lalonde_py["propensity_score"] = p_score
+
+matched = matcher.match(
+    data=lalonde_py,
+    treatment_col="treat",
+    score_cols=["propensity_score"]
+)
+
+att = matched.loc[matched["treat"] == 1, "re78"].mean() - matched.loc[matched["treat"] == 0, "re78"].mean()
+
+
 lalonde_py["treat"] = T
 df["re78"] = Y
 
