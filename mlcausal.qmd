@@ -28,6 +28,12 @@ import pandas as pd
 
 lalonde_py = pd.read_csv("rawdata/lalonde.csv")
 
+lalonde_py2 = pd.get_dummies(
+    lalonde_py,
+    columns=["race"],
+    drop_first=True
+)
+
 ```
 # 因果推論 at glance
 
@@ -86,37 +92,18 @@ import pandas as pd
 from causalml.propensity import LogisticRegressionPropensityModel
 from causalml.match import NearestNeighborMatch
 
-# 既に列があるので不要
-# lalonde_py["treat"] = T
-# df["re78"] = Y
-
-X = pd.get_dummies(
-    lalonde_py[["age", "educ", "race", "married", "nodegree", "re74", "re75"]],
-    columns=["race"],
-    drop_first=True
-)
-p_score = ps_model.fit_predict(X, lalonde_py["treat"])
-lalonde_py["propensity_score"] = p_score
-
-matched = matcher.match(
-    data=lalonde_py,
-    treatment_col="treat",
-    score_cols=["propensity_score"]
-)
-
-att = matched.loc[matched["treat"] == 1, "re78"].mean() - matched.loc[matched["treat"] == 0, "re78"].mean()
-
-
-lalonde_py["treat"] = T
-df["re78"] = Y
-
 # -----------------------
 # 2) Estimate propensity score with Logistic Regression
 # -----------------------
-ps_model = LogisticRegressionPropensityModel()  # sklearn LogisticRegression 기반 :contentReference[oaicite:1]{index=1}
-p_score = ps_model.fit_predict(lalonde_py[["age", "educ", "race", "married", "nodegree", "re74", "re75"]], lalonde_py["treat"])
 
-lalonde_py["propensity_score"] = p_score
+ps_model = LogisticRegressionPropensityModel()  
+p_score = ps_model.fit_predict(lalonde_py2[["age", "educ", "married", "nodegree", "re74", "re75", "race_hispan", "race_white"]], lalonde_py2["treat"])
+
+lalonde_py_pm = (
+  lalonde_py2
+  .assign(propensity_score = p_score)
+  
+)
 
 # -----------------------
 # 3) Propensity score matching (Nearest Neighbor)
@@ -129,7 +116,7 @@ matcher = NearestNeighborMatch(
 )
 
 matched = matcher.match(
-    data=lalonde_py,
+    data=lalonde_py_pm,
     treatment_col="treat",
     score_cols=["propensity_score"]  # ここにPS列名
 )
@@ -140,7 +127,7 @@ print("matched size:", matched.shape)
 # -----------------------
 # 4) Simple ATT estimate on matched sample (difference in means)
 # -----------------------
-att = matched.loc[matched["treatment"] == 1, "outcome"].mean() - matched.loc[matched["treatment"] == 0, "outcome"].mean()
+att = matched.loc[matched["treat"] == 1, "re78"].mean() - matched.loc[matched["treat"] == 0, "re78"].mean()
 print("ATT (diff in means on matched sample):", att)
 
 ```
