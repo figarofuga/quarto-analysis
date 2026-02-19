@@ -1,25 +1,10 @@
 ---
 title: "機械学習を用いた因果推論"
 author: "Nozomi Niimi"
-format:
-  beamer:
-    aspectratio: 169
-    colortheme: lily
-    theme: AnnArbor
-    pdf-engine: lualatex
-    highlight-style: tango
-header-includes:
-  - \usepackage{luatexja}
-  - \usepackage{luatexja-fontspec}
-  - \setmainfont{TeX Gyre Termes}
-  - \setsansfont{TeX Gyre Heros}
-  - \setmonofont{Noto Sans Mono}
-  - \setmainjfont{HaranoAjiMincho}
-  - \setsansjfont{HaranoAjiGothic}
-  - \usepackage{fancyvrb}
-  - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+format: clean-typst
+date: today
+date-format: long
 jupyter: python3
-
 ---
 
 ```{python}
@@ -35,6 +20,7 @@ lalonde_py2 = pd.get_dummies(
 )
 
 ```
+
 # 因果推論 at glance
 
 ## 因果関係
