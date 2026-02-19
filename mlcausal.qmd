@@ -50,12 +50,13 @@ lalonde_py2 = pd.get_dummies(
 - Matching
 - 層別化
 
-## 例えば単純な回帰だと {.allowframebreaks .fragile}
+## 例えば単純な回帰だと
 ```{python}
+
+
 import pandas as pd
 import numpy as np
 import statsmodels.formula.api as smf
-from stargazer.stargazer import Stargazer
 
 
 fit_ols = smf.ols("re78 ~ treat + age + educ + race + married + nodegree + re74 + re75", data = lalonde_py)
@@ -64,9 +65,7 @@ res_ols = fit_ols.fit()
 
 pd.read_html(res_ols.summary2().as_html())[1]
 
-res_ols_sg = Stargazer([res_ols])
 
-res_ols_sg.render_latex()
 ```
 
 ## Matchingだと
@@ -98,7 +97,7 @@ lalonde_py_pm = (
 # 3) Propensity score matching (Nearest Neighbor)
 # -----------------------
 matcher = NearestNeighborMatch(
-    caliper=0.05,     # PS差がこの範囲以内のみマッチ (例) :contentReference[oaicite:2]{index=2}
+    caliper=0.1,     # PS差がこの範囲以内のみマッチ (例) :contentReference[oaicite:2]{index=2}
     replace=False,    # 置換なし
     ratio=1,          # 1:1 matching
     random_state=42
