@@ -1,7 +1,10 @@
 ---
 title: "機械学習を用いた因果推論"
 author: "Nozomi Niimi"
-format: clean-typst
+format: 
+  clean-typst: 
+    mainfont: "Noto Sans CJK JP"
+    sansfont: "Noto Sans CJK JP"
 date: today
 date-format: long
 jupyter: python3
