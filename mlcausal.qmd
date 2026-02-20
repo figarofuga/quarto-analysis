@@ -7,6 +7,10 @@ format:
     sansfont: "Noto Sans CJK JP"
 date: today
 date-format: long
+execute:
+  echo: false
+  warning: false
+  error: false
 jupyter: python3
 ---
 
@@ -39,10 +43,60 @@ lalonde_py2 = pd.get_dummies(
   - DAGを作り、do operatorを使うPearl流
 - 詳細は省くが、今回はPearl流のDAGを中心に考える
 
+## DAGの基本
+
+```{python}
+import graphviz
+
+dot = graphviz.Digraph(format='png')
+dot.attr(rankdir="TB")  # 上→下
+
+# ノード
+dot.node('A', '曝露')
+dot.node('B', '中間因子')
+dot.node('C', 'アウトカム')
+dot.node('D', '交絡因子')
+dot.node('E', 'Collider')  # 表示名はお好みで Colider でもOK
+
+# ランク指定
+with dot.subgraph() as s:
+    s.attr(rank='source')   # 最上段
+    s.node('E')
+
+with dot.subgraph() as s:
+    s.attr(rank='same')     # 真ん中段
+    s.node('A')
+    s.node('B')
+    s.node('C')
+
+with dot.subgraph() as s:
+    s.attr(rank='sink')     # 最下段
+    s.node('D')
+
+# 真ん中段の左右順を固定（見えないエッジ）
+dot.edge('A', 'B', style='invis')
+dot.edge('B', 'C', style='invis')
+
+# D を B の少し下に寄せる（見えないエッジ）
+dot.edge('B', 'D', style='invis')
+
+# 実際の因果エッジ
+dot.edge('A', 'B')
+dot.edge('B', 'C')
+dot.edge('D', 'A', constraint='false')  # レイアウトへの影響を弱める
+dot.edge('D', 'C', constraint='false')
+dot.edge('A', 'E')
+dot.edge('C', 'E')
+
+dot
+
+
+```
+
 ## 通常の統計学的手法
 
 - 通常は交絡因子の調整により因果関係を推測する
-<!-- Todo: DAGを作る -->
+
 
 ## 交絡因子の調整の方法
 
@@ -63,7 +117,14 @@ fit_ols = smf.ols("re78 ~ treat + age + educ + race + married + nodegree + re74 
 
 res_ols = fit_ols.fit()
 
-pd.read_html(res_ols.summary2().as_html())[1]
+coef_table = (
+    res_ols.summary2().tables[1]
+    .rename(columns={"Coef.": "Coef", "Std.Err.": "Std.Err", "P>|t|": "P"})
+    [["Coef", "Std.Err", "t", "P"]]
+    .round(2)
+)
+
+coef_table
 
 
 ```
@@ -264,7 +325,6 @@ grf::average_treatment_effect(fit_grf, target.sample = "overlap")
 
 
 ## python 
-
 
 
 
