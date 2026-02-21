@@ -106,8 +106,6 @@ dot
 
 ## 例えば単純な回帰だと
 ```{python}
-
-
 import pandas as pd
 import numpy as np
 import statsmodels.formula.api as smf
@@ -119,9 +117,12 @@ res_ols = fit_ols.fit()
 
 coef_table = (
     res_ols.summary2().tables[1]
-    .rename(columns={"Coef.": "Coef", "Std.Err.": "Std.Err", "P>|t|": "P"})
-    [["Coef", "Std.Err", "t", "P"]]
-    .round(2)
+    .rename(columns={"Coef.": "Coefficient", "Std.Err.": "SE", "P>|t|": "P"})
+    .round(2) # 先に丸める
+    .assign(
+        **{"95%CI": lambda x: x['[0.025'].astype(str) + " - " + x['0.975]'].astype(str)}
+    )
+    [["Coefficient", "95%CI", "P"]]
 )
 
 coef_table
