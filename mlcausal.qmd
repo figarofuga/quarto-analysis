@@ -11,7 +11,7 @@ execute:
   echo: false
   warning: false
   error: false
-jupyter: python3
+# jupyter: python3
 ---
 
 ```{python}
@@ -109,6 +109,7 @@ dot
 ## 例えば単純な回帰だと
 ```{python}
 #| label: simple-regression
+#| results: asis
 
 import pandas as pd
 import numpy as np
@@ -124,9 +125,11 @@ coef_table = (
     .rename(columns={"Coef.": "Coef", "Std.Err.": "Std.Err", "P>|t|": "P"})
     [["Coef", "Std.Err", "t", "P"]]
     .round(2)
+    .reset_index()
+    .rename(columns={"index": "term"})
 )
 
-coef_table
+print(coef_table.to_markdown(index=False, tablefmt="pipe"))
 
 
 ```
@@ -441,20 +444,20 @@ DR_te = DR_learner.effect(X_test)
 
 ## 因果forest
 
-<!-- ```{r}
-library(dplyr)
-library(grf)
-
-X <- model.matrix(~ age + educ + race + married + nodegree + re74 + re75 + 0, data = dplyr::select(lalonde_r, -re78, -treat))
-Y <- lalonde_r$re78
-W <- lalonde_r$treat
-
-fit_grf <- grf::causal_forest(X = X, Y = Y, W = W)
-
-grf::average_treatment_effect(fit_grf, target.sample = "overlap")
-
-``` -->
+- HTEを計測するのに有名
+- Ashey et al 2019
 
 
-## python 
+## Survival model
 
+```{r}
+#| label: survival-model
+
+library(here)
+library(readr)
+
+lalonde <- readr::read_csv(here::here("rawdata", "lalonde.csv"))
+
+head(lalonde)
+
+```

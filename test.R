@@ -1,7 +1,6 @@
-library(tidyverse)
-library(easystats)
-library(tinyplot)
+library(here)
+library(readr)
 
-diamonds <- ggplot2::diamonds
+lalonde <- readr::read_csv(here::here("rawdata", "lalonde.csv"))
 
 

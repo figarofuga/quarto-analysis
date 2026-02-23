@@ -1,5 +1,30 @@
 # %%
 
+import pandas as pd
+
+lalonde = (
+    pd.read_csv("rawdata/lalonde.csv")
+    .pipe(pd.get_dummies, columns=["race"], drop_first=True, dtype=int)
+)
+import pandas as pd
+import numpy as np
+import statsmodels.formula.api as smf
+
+
+fit_ols = smf.ols("re78 ~ treat + age + educ + race_hispan + race_white + married + nodegree + re74 + re75", data = lalonde)
+
+res_ols = fit_ols.fit()
+
+coef_table = (
+    res_ols.summary2().tables[1]
+    .rename(columns={"Coef.": "Coef", "Std.Err.": "Std.Err", "P>|t|": "P"})
+    [["Coef", "Std.Err", "t", "P"]]
+    .round(2)
+)
+
+
+# %%
+
 # Required libraries
 import pandas as pd
 from causalml.propensity import LogisticRegressionPropensityModel
