@@ -41,7 +41,8 @@
         "REditorSupport.r",
         "ms-python.python",
         "quarto.quarto",
-        "ms-toolsai.jupyter"
+        "ms-toolsai.jupyter",
+        "openai.chatgpt"
       ]
     }
   },
