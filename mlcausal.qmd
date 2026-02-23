@@ -44,53 +44,54 @@ lalonde = (
 
 ## DAGの基本
 
-```{python}
+```{r}
 #| label: DAG
+#| fig-width: 10
+#| fig-height: 4
 
-import graphviz
+library(dagitty)
+library(ggdag)
+library(dplyr)
+library(ggplot2)
+library(grid)
 
-dot = graphviz.Digraph(format='png')
-dot.attr(rankdir="TB")  # 上→下
+dag <- dagitty("dag {
+  D -> A
+  A -> B
+  B -> C
+  D -> C
+  A -> E
+  C -> E
+}")
 
-# ノード
-dot.node('A', '曝露')
-dot.node('B', '中間因子')
-dot.node('C', 'アウトカム')
-dot.node('D', '交絡因子')
-dot.node('E', 'Collider')
+# Graphviz版の見た目に合わせて座標を固定
+coordinates(dag) <- list(
+  x = c(A = 1, B = 4, C = 7, D = 4, E = 4),
+  y = c(A = 0, B = 0, C = 0, D = -1, E = 1)
+)
 
-# ランク指定
-with dot.subgraph() as s:
-    s.attr(rank='source')   # 最上段
-    s.node('E')
+labels_ja <- c(
+  A = "曝露",
+  B = "中間因子",
+  C = "アウトカム",
+  D = "交絡因子",
+  E = "Collider"
+)
 
-with dot.subgraph() as s:
-    s.attr(rank='same')     # 真ん中段
-    s.node('A')
-    s.node('B')
-    s.node('C')
-
-with dot.subgraph() as s:
-    s.attr(rank='sink')     # 最下段
-    s.node('D')
-
-# 真ん中段の左右順を固定（見えないエッジ）
-dot.edge('A', 'B', style='invis')
-dot.edge('B', 'C', style='invis')
-
-# D を B の少し下に寄せる（見えないエッジ）
-dot.edge('B', 'D', style='invis')
-
-# 実際の因果エッジ
-# 真ん中段の矢印は楕円の右中央 -> 左中央に固定
-dot.edge('A', 'B', tailport='e', headport='w')
-dot.edge('B', 'C', tailport='e', headport='w')
-dot.edge('D', 'A', constraint='false')  # レイアウトへの影響を弱める
-dot.edge('D', 'C', constraint='false')
-dot.edge('A', 'E')
-dot.edge('C', 'E')
-
-dot
+tidy_dagitty(dag) |>
+  mutate(
+    label = labels_ja[name],
+    label_x = if_else(name == "C", x + 0.05, x),
+    label_y = y
+  ) |>
+  ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_edges(
+    arrow_directed = grid::arrow(length = grid::unit(8, "pt"), type = "closed")
+  ) +
+  geom_dag_point(size = 32, alpha = 0.2, color = "#2C7FB8") +
+  geom_dag_text(aes(x = label_x, y = label_y, label = label), size = 4, color = "black") +
+  theme_dag() +
+  coord_equal(xlim = c(0, 8), ylim = c(-1.5, 1.5), clip = "off")
 
 
 ```
