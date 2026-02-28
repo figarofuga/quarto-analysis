@@ -454,11 +454,14 @@ DR_te = DR_learner.effect(X_test)
 ```{r}
 #| label: survival-model
 
-library(here)
-library(readr)
+library(survival)
+library(grf)
 
-lalonde <- readr::read_csv(here::here("rawdata", "lalonde.csv"))
+colon <- survival::colon
 
-head(lalonde)
+head(colon)
+
+grf::causal_survival_forest(W = colon$)
+
 
 ```
