@@ -486,6 +486,20 @@ surv_tree <- policytree::policy_tree(
   depth = 2
 )
 
-plot(surv_tree, leaf.labels = c("Observation", "Chemotherapy"))
+# plot(surv_tree, leaf.labels = c("Observation", "Chemotherapy"))
+
+# HTML のときだけ widget、Typst などは PNG に変換して出力
+if (knitr::is_html_output()) {
+  plot(surv_tree, leaf.labels = c("Observation", "Chemotherapy"))
+} else {
+  g <- DiagrammeR::grViz(policytree::export_graphviz(surv_tree))
+  svg_txt <- DiagrammeRsvg::export_svg(g)
+  tf_svg <- tempfile(fileext = ".svg")
+  tf_png <- tempfile(fileext = ".png")
+  writeLines(svg_txt, tf_svg)
+  rsvg::rsvg_png(tf_svg, tf_png, width = 1600, height = 1000)
+  knitr::include_graphics(tf_png)
+}
+
 
 ```
