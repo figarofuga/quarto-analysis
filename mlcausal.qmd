@@ -11,6 +11,7 @@ execute:
   echo: false
   warning: false
   error: false
+prefer-html: true
 # jupyter: python3
 ---
 
@@ -244,8 +245,7 @@ model = CausalModel(
     graph=gml_string
 )
 
-# 5. グラフの確認
-model.view_model()
+# 5. グラフ可視化は HTML 向けのため、Typst 出力ではスキップ
 
 model.summary()
 
@@ -488,18 +488,12 @@ surv_tree <- policytree::policy_tree(
 
 # plot(surv_tree, leaf.labels = c("Observation", "Chemotherapy"))
 
-# HTML のときだけ widget、Typst などは PNG に変換して出力
-if (knitr::is_html_output()) {
-  plot(surv_tree, leaf.labels = c("Observation", "Chemotherapy"))
-} else {
-  g <- DiagrammeR::grViz(policytree::export_graphviz(surv_tree))
-  svg_txt <- DiagrammeRsvg::export_svg(g)
-  tf_svg <- tempfile(fileext = ".svg")
-  tf_png <- tempfile(fileext = ".png")
-  writeLines(svg_txt, tf_svg)
-  rsvg::rsvg_png(tf_svg, tf_png, width = 1600, height = 1000)
-  knitr::include_graphics(tf_png)
-}
+# base plot は knitr が各出力形式向けに自動処理する
 
+
+# surv_tree_plot <- plot(surv_tree, leaf.labels = c("Observation", "Chemotherapy"))
+# cat(DiagrammeRsvg::export_svg(surv_tree_plot), file = here::here("figure_list", 'treeplot.svg'))
 
 ```
+![Treeplot](figure_list/treeplot.svg)
+
