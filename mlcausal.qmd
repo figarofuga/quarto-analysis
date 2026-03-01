@@ -454,14 +454,38 @@ DR_te = DR_learner.effect(X_test)
 ```{r}
 #| label: survival-model
 
+library(tidyverse)
 library(survival)
 library(grf)
+library(policytree)
 
-colon <- survival::colon
+colon_prep <- survival::colon |> 
+  dplyr::mutate(
+    rx_bin = dplyr::if_else(rx == "Obs", 0, 1)
+  ) |> 
+  tidyr::drop_na()
 
 head(colon)
 
-grf::causal_survival_forest(W = colon$)
+survfit_grf <- grf::causal_survival_forest(
+  X = colon_prep[, c("age", "sex", "obstruct", "perfor", "adhere", "nodes", "differ", "extent", "surg")],
+  Y = colon_prep$time, 
+  W = colon_prep$rx_bin, 
+  D = colon_prep$status, 
+  target = "RMST", 
+  horizon = 365*5
+  )
 
+Gamma.matrix <- double_robust_scores(survfit_grf)
+
+head(Gamma.matrix)
+
+surv_tree <- policytree::policy_tree(
+  colon_prep[, c("age", "sex", "obstruct", "perfor", "adhere", "nodes", "differ", "extent", "surg")], 
+  Gamma.matrix, 
+  depth = 2
+)
+
+plot(surv_tree, leaf.labels = c("Observation", "Chemotherapy"))
 
 ```
