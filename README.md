@@ -12,3 +12,8 @@ source .venv/bin/activate
 git fetch
 git reset --hard origin/main
 ```
+
+renderする時は以下のようにしてください
+```bash
+quarto preview mlcausal.qmd --to clean-typst --no-watch-inputs --no-browse
+```
