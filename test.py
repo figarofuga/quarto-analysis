@@ -40,4 +40,34 @@ T_te = T_learner.effect(X_test)
 print(T_te)
 
 # %%
+import lightgbm as lgb
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
+# 1. データセットの読み込み
+# ここでは例としてscikit-learnの乳がんデータセットを使用します
+data = load_breast_cancer()
+X = data.data
+y = data.target
+
+# 2. データを学習用（80%）とテスト用（20%）に分割
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# 3. モデルの初期化 (scikit-learn API)
+# 引数を指定しない場合、デフォルトのハイパーパラメータが適用されます
+model = lgb.LGBMClassifier(random_state=42)
+
+# 4. モデルの学習 (fit)
+print("モデルの学習を開始します...")
+model.fit(X_train, y_train)
+print("学習が完了しました。")
+
+# 5. テストデータでの予測と評価（おまけ）
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+
+print(f"テストデータの正解率 (Accuracy): {accuracy:.4f}")
+# %%
