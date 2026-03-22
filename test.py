@@ -7,7 +7,7 @@ lalonde = (
     .pipe(pd.get_dummies, columns=["race"], drop_first=True, dtype=int)
 )
 
-from econml.metalearners import SLearner
+from econml.metalearners import TLearner
 import numpy as np
 import pandas as pd 
 from sklearn.ensemble import GradientBoostingRegressor
@@ -29,15 +29,15 @@ X_train, X_test, y_train, y_test = train_test_split(
 T_train = T.loc[y_train.index]
 T_test = T.loc[y_test.index]
 
-# Instantiate S learner
-overall_model = GradientBoostingRegressor(n_estimators=100, max_depth=6, min_samples_leaf=int(491/100))
-S_learner = SLearner(overall_model=overall_model)
-# Train S_learner
-S_learner.fit(y_train, T_train, X=X_train)
+# Instantiate T learner
+models = GradientBoostingRegressor(n_estimators=100, max_depth=6, min_samples_leaf=int(n/100))
+T_learner = TLearner(models=models)
+# Train T_learner
+T_learner.fit(y_train, T_train, X=X_train)
 # Estimate treatment effects on test data
-S_te = S_learner.effect(X_test)
+T_te = T_learner.effect(X_test)
 
-print(S_te)
+print(T_te)
 
 # %%
 
