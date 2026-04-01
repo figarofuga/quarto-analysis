@@ -1,0 +1,7 @@
+.git
+.venv
+.quarto
+.Rhistory
+graph-output
+graph-output.png
+Rplots.pdf
