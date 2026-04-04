@@ -388,12 +388,15 @@ print(S_te)
 ```{python}
 #| label: scratch-for-S-learner
 
+
+import numpy as np
+import pandas as pd
 import lightgbm as lgb
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import root_mean_squared_error
 
-import pandas as pd
+
 
 lalonde = (
     pd.read_csv("rawdata/lalonde.csv")
@@ -401,9 +404,8 @@ lalonde = (
 )
 # 1. データセットの読み込み
 # ここでは例としてscikit-learnの乳がんデータセットを使用します
-X = lalonde.loc[:,["age", "married", "educ", "nodegree", "re74", "re75", "race_hispan", "race_white"]]
+X = lalonde.loc[:,["treat", "age", "married", "educ", "nodegree", "re74", "re75", "race_hispan", "race_white"]]
 y = lalonde['re78']
-T = lalonde['treat']
 n = lalonde.shape[0]
 
 
@@ -423,9 +425,35 @@ print("学習が完了しました。")
 
 # 5. テストデータでの予測と評価（おまけ）
 y_pred = model.predict(X_test)
-mse = ((y_test - y_pred) ** 2).mean()
 
-print(f"テストデータの平均二乗誤差 (MSE): {mse:.4f}")
+y_true = [3, -0.5, 2, 7]
+y_pred = [2.5, 0.0, 2, 8]
+rmse = root_mean_squared_error(y_true, y_pred)
+
+print(f"テストデータのRMSE: {rmse:.4f}")
+
+
+pred_0 = model.predict(X.assign(treat = 0))
+pred_1 = model.predict(X.assign(treat = 1))
+te = np.mean(pred_1 - pred_0)
+
+print(f"平均処置効果の推定値: {te:.4f}")
+
+X_s_learn = (
+    lalonde
+    .loc[:,["treat", "age", "married", "educ", "nodegree", "re74", "re75", "race_hispan", "race_white", "re78"]]
+    .assign(
+        treat_0 = 0,
+        effect_0 = pred_0, 
+        treat_1 = 1, 
+        effect_1 = pred_1,
+        treat_effect = pred_1 - pred_0
+    ) 
+)
+
+X_s_learn.head()
+
+
 
 ```
 
