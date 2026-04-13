@@ -385,6 +385,8 @@ print(S_te)
 
 ```
 
+## Scratch for S-learner
+
 ```{python}
 #| label: scratch-for-S-learner
 
@@ -416,7 +418,9 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 # 3. モデルの初期化 (scikit-learn API)
 # 引数を指定しない場合、デフォルトのハイパーパラメータが適用されます
-model = lgb.LGBMRegressor(random_state=42)
+model = lgb.LGBMRegressor(
+  random_state=42, 
+  verbosity = -1)
 
 # 4. モデルの学習 (fit)
 print("モデルの学習を開始します...")
@@ -457,7 +461,7 @@ X_s_learn.head()
 
 ```
 
-
+## T learner
 ```{python}
 #| label: T-learner
 
@@ -492,6 +496,7 @@ T_learner.fit(y_train, T_train, X=X_train)
 # Estimate treatment effects on test data
 T_te = T_learner.effect(X_test)
 
+print("T learnerでの局所治療効果")
 print(T_te)
 
 ```
