@@ -109,6 +109,7 @@ tidy_dagitty(dag) |>
 - 層別化
 
 ## 例えば単純な回帰だと
+
 ```{python}
 #| label: simple-regression
 #| results: asis
@@ -190,79 +191,6 @@ print("ATT (diff in means on matched sample):", att)
 ```
 
 
-## DAGつき
-
-```{python}
-#| label: examination-Dowhy
-
-
-import pandas as pd
-import dowhy
-import networkx as nx
-from dowhy import CausalModel
-
-
-# 2. NetworkXでグラフを定義
-causal_graph = nx.DiGraph()
-# "age", "educ", "married", "nodegree", "re74", "re75", "race_black", "race_hispan", "race_white"
-# ノードとエッジを追加 (交絡構造: Age -> Exercise, Age -> Health)
-causal_graph.add_nodes_from(["treat", "age", "educ", "married", "nodegree", "re74", "re75", "race_black", "race_hispan", "re78"])
-
-causal_graph.add_edges_from([
-    ('treat', 're78'),
-    ('re74', 're75'),
-    ('age', 'treat'), 
-    ('age', 're78'),
-    ('educ', 'treat'),
-    ('educ', 're78'),
-    ('married', 'treat'),
-    ('married', 're78'),
-    ('nodegree', 'treat'),
-    ('nodegree', 're78'),
-    ('re74', 'treat'),
-    ('re75', 'treat'), 
-    ('re75', 're78'), 
-    ('race_black', 'treat'),
-    # ('race_black', 're74'),
-    # ('race_black', 're75'),
-    # ('race_black', 're78'),
-    ('race_hispan', 'treat')
-    # ('race_hispan', 're74'),
-    # ('race_hispan', 're75'),
-    # ('race_hispan', 're78')
-    
-])
-
-# 3. NetworkXオブジェクトをGML文字列に変換
-# 注意: 文字列内の改行コードなどを整形して渡します
-gml_string = "".join(nx.generate_gml(causal_graph))
-
-# 4. モデルの定義
-model = CausalModel(
-    data=lalonde,
-    treatment='treat',
-    outcome='re78',
-    graph=gml_string
-)
-
-# 5. グラフ可視化は HTML 向けのため、Typst 出力ではスキップ
-
-model.summary()
-
-identified_estimand = model.identify_effect(proceed_when_unidentifiable=True)
-
-print(identified_estimand)
-
-causal_estimate = model.estimate_effect(identified_estimand,
-        method_name="backdoor.propensity_score_matching")
-        
-print(causal_estimate)
-
-res_random=model.refute_estimate(identified_estimand, causal_estimate, method_name="random_common_cause", show_progress_bar=True)
-
-print(res_random)
-
-```
 
 ## Doubly robust estimation 
 
@@ -307,6 +235,53 @@ ci95 = (ate_dr - 1.96 * se_dr, ate_dr + 1.96 * se_dr)
 print(f"DR ATE: {ate_dr:.2f}")
 print(f"SE: {se_dr:.2f}")
 print(f"95% CI: ({ci95[0]:.2f}, {ci95[1]:.2f})")
+
+
+```
+
+## TMLE 
+
+```{python}
+#| label: TMLE
+
+
+import numpy as np
+import pandas as pd
+import statsmodels.formula.api as smf
+
+# 1) load + dummies (method chain)
+
+
+# Y = "re78"
+# T = "treat"
+# X = ["age", "educ", "married", "nodegree", "re74", "re75", "race_hispan", "race_white"]
+# rhs = " + ".join(X)
+
+# # 2) Propensity model: logistic regression
+# ps_fit = smf.logit("treat ~ age + educ + married + nodegree + re74 + re75 + race_hispan + race_white", data=lalonde).fit(disp=0)
+# e_hat = ps_fit.predict(lalonde).clip(1e-3, 1 - 1e-3)  # stabilize
+
+# # 3) Outcome models: treated / control separately
+# mu1_fit = smf.ols("re78 ~ treat + age + educ + married + nodegree + re74 + re75 + race_hispan + race_white", data=lalonde.query("treat == 1")).fit()
+# mu0_fit = smf.ols("re78 ~ treat + age + educ + married + nodegree + re74 + re75 + race_hispan + race_white", data=lalonde.query("treat == 0")).fit()
+
+# mu1_hat = mu1_fit.predict(lalonde)
+# mu0_hat = mu0_fit.predict(lalonde)
+
+# # 4) AIPW score (ATE)
+# phi = (
+#     (mu1_hat - mu0_hat)
+#     + lalonde[T] * (lalonde[Y] - mu1_hat) / e_hat
+#     - (1 - lalonde[T]) * (lalonde[Y] - mu0_hat) / (1 - e_hat)
+# )
+
+# ate_dr = phi.mean()
+# se_dr = phi.std(ddof=1) / np.sqrt(len(lalonde))
+# ci95 = (ate_dr - 1.96 * se_dr, ate_dr + 1.96 * se_dr)
+
+# print(f"DR ATE: {ate_dr:.2f}")
+# print(f"SE: {se_dr:.2f}")
+# print(f"95% CI: ({ci95[0]:.2f}, {ci95[1]:.2f})")
 
 
 ```
