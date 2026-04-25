@@ -1,11 +1,6 @@
 # %%
 
-import pandas as pd
-
-lalonde = (
-    pd.read_csv("rawdata/lalonde.csv")
-    .pipe(pd.get_dummies, columns=["race"], drop_first=True, dtype=int)
-)
+# %%
 
 from econml.metalearners import TLearner
 import numpy as np

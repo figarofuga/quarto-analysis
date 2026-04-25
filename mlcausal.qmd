@@ -247,41 +247,124 @@ print(f"95% CI: ({ci95[0]:.2f}, {ci95[1]:.2f})")
 
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 import statsmodels.formula.api as smf
+from scipy.special import expit, logit
 
-# 1) load + dummies (method chain)
+lalonde = (
+    pd.read_csv("rawdata/lalonde.csv")
+    .pipe(pd.get_dummies, columns=["race"], drop_first=True, dtype=int)
+)
+
+# ------------------------------------------------------------
+# 2. define outcome
+# ------------------------------------------------------------
+Y = lalonde["re78"].to_numpy(dtype=float)
+A = lalonde["treat"].to_numpy(dtype=float)
+
+# ------------------------------------------------------------
+# 3. propensity score model g(A|W)
+#    Rの式にかなり近い形
+# ------------------------------------------------------------
+g_formula = "treat ~ age + educ + race_hispan + race_white + married + nodegree + re74 + re75"
+g_fit = smf.logit(g_formula, data=lalonde).fit(disp=False)
+
+g1W = g_fit.predict(lalonde)
+g1W = np.clip(g1W, 1e-6, 1 - 1e-6)
+g0W = 1 - g1W
+
+# ------------------------------------------------------------
+# 4. initial outcome regression Q(A,W) = E[Y|A,W]
+#    まずは単純な main effect model
+# ------------------------------------------------------------
+Q_formula = "re78 ~ treat + age + educ + race_hispan + race_white + married + nodegree + re74 + re75"
+Q_fit = smf.ols(Q_formula, data=lalonde).fit()
+
+# observed Q(A,W)
+QAW = Q_fit.predict(lalonde)
+
+# counterfactual predictions
+df1 = lalonde.copy()
+df1["treat"] = 1
+Q1W = Q_fit.predict(df1)
+
+df0 = lalonde.copy()
+df0["treat"] = 0
+Q0W = Q_fit.predict(df0)
 
 
-# Y = "re78"
-# T = "treat"
-# X = ["age", "educ", "married", "nodegree", "re74", "re75", "race_hispan", "race_white"]
-# rhs = " + ".join(X)
+# ------------------------------------------------------------
+# 5. scale outcome to (0,1)
+#    logistic fluctuation のため
+# ------------------------------------------------------------
+y_min = Y.min()
+y_max = Y.max()
 
-# # 2) Propensity model: logistic regression
-# ps_fit = smf.logit("treat ~ age + educ + married + nodegree + re74 + re75 + race_hispan + race_white", data=lalonde).fit(disp=0)
-# e_hat = ps_fit.predict(lalonde).clip(1e-3, 1 - 1e-3)  # stabilize
+def to_unit(x, xmin, xmax, eps=1e-6):
+    z = (x - xmin) / (xmax - xmin)
+    return np.clip(z, eps, 1 - eps)
 
-# # 3) Outcome models: treated / control separately
-# mu1_fit = smf.ols("re78 ~ treat + age + educ + married + nodegree + re74 + re75 + race_hispan + race_white", data=lalonde.query("treat == 1")).fit()
-# mu0_fit = smf.ols("re78 ~ treat + age + educ + married + nodegree + re74 + re75 + race_hispan + race_white", data=lalonde.query("treat == 0")).fit()
+def from_unit(z, xmin, xmax):
+    return z * (xmax - xmin) + xmin
 
-# mu1_hat = mu1_fit.predict(lalonde)
-# mu0_hat = mu0_fit.predict(lalonde)
+Y_s   = to_unit(Y,   y_min, y_max)
+QAW_s = to_unit(QAW, y_min, y_max)
+Q1W_s = to_unit(Q1W, y_min, y_max)
+Q0W_s = to_unit(Q0W, y_min, y_max)
 
-# # 4) AIPW score (ATE)
-# phi = (
-#     (mu1_hat - mu0_hat)
-#     + lalonde[T] * (lalonde[Y] - mu1_hat) / e_hat
-#     - (1 - lalonde[T]) * (lalonde[Y] - mu0_hat) / (1 - e_hat)
-# )
+# ------------------------------------------------------------
+# 6. clever covariate
+# ------------------------------------------------------------
+H = A / g1W - (1 - A) / g0W
 
-# ate_dr = phi.mean()
-# se_dr = phi.std(ddof=1) / np.sqrt(len(lalonde))
-# ci95 = (ate_dr - 1.96 * se_dr, ate_dr + 1.96 * se_dr)
+# fluctuation用データ
+df_fluct = pd.DataFrame({
+    "Y_s": Y_s,
+    "H": H,
+    "offset_q": logit(QAW_s)
+})
 
-# print(f"DR ATE: {ate_dr:.2f}")
-# print(f"SE: {se_dr:.2f}")
-# print(f"95% CI: ({ci95[0]:.2f}, {ci95[1]:.2f})")
+# ------------------------------------------------------------
+# 7. fluctuation step
+#    logit(Q*) = logit(Q) + epsilon * H
+#    切片なしにしたいので "0 + H"
+# ------------------------------------------------------------
+fluct_fit = smf.glm(
+    formula="Y_s ~ 0 + H",
+    data=df_fluct,
+    family=sm.families.Binomial(),
+    offset=df_fluct["offset_q"]
+).fit()
+
+epsilon = fluct_fit.params["H"]
+
+# updated predictions on scaled scale
+QAW_star_s = expit(logit(QAW_s) + epsilon * H)
+Q1W_star_s = expit(logit(Q1W_s) + epsilon * (1 / g1W))
+Q0W_star_s = expit(logit(Q0W_s) + epsilon * (-1 / g0W))
+
+# back-transform to original re78 scale
+QAW_star = from_unit(QAW_star_s, y_min, y_max)
+Q1W_star = from_unit(Q1W_star_s, y_min, y_max)
+Q0W_star = from_unit(Q0W_star_s, y_min, y_max)
+
+# ------------------------------------------------------------
+# 8. TMLE estimate
+# ------------------------------------------------------------
+psi_tmle = np.mean(Q1W_star - Q0W_star)
+
+# ------------------------------------------------------------
+# 9. influence curve, SE, CI
+# ------------------------------------------------------------
+IC = H * (Y - QAW_star) + (Q1W_star - Q0W_star) - psi_tmle
+se_tmle = IC.std(ddof=1) / np.sqrt(len(IC))
+ci_low = psi_tmle - 1.96 * se_tmle
+ci_high = psi_tmle + 1.96 * se_tmle
+
+print("TMLE ATE (re78 scale):", psi_tmle)
+print("SE:", se_tmle)
+print("95% CI:", (ci_low, ci_high))
+print("epsilon:", epsilon)
 
 
 ```
