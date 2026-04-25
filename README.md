@@ -17,3 +17,7 @@ renderする時は以下のようにしてください
 ```bash
 quarto preview mlcausal.qmd --to clean-typst --no-watch-inputs --no-browse
 ```
+あるいは以下のようにしてください
+```bash
+bash render.sh
+```
