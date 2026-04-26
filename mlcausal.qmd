@@ -2,17 +2,21 @@
 title: "機械学習を用いた因果推論"
 author: "Nozomi Niimi"
 format: 
-  clean-typst: 
-    mainfont: "Noto Sans CJK JP"
-    sansfont: "Noto Sans CJK JP"
-date: today
-date-format: long
+  revealjs:
+    pdf-separate-fragments: false
+    pdf-max-pages-per-slide: 1
+    theme: [default, custom.scss]
+    embed-resources: false
+    self-contained-math: false
+    slide-number: true
 execute:
+  freeze: auto
+  cache: true
   echo: false
   warning: false
   error: false
-prefer-html: true
-# jupyter: python3
+date: today
+date-format: long
 ---
 
 ```{python}
@@ -520,6 +524,14 @@ X_s_learn.head()
 ```
 
 ## T learner
+
+
+![t-learner](figure_list/t-learner.drawio.svg)
+
+
+## Scratch for T-learner
+
+
 ```{python}
 #| label: T-learner
 
@@ -684,9 +696,9 @@ surv_tree <- policytree::policy_tree(
 # base plot は knitr が各出力形式向けに自動処理する
 
 
-# surv_tree_plot <- plot(surv_tree, leaf.labels = c("Observation", "Chemotherapy"))
+plot(surv_tree, leaf.labels = c("Observation", "Chemotherapy"))
 # cat(DiagrammeRsvg::export_svg(surv_tree_plot), file = here::here("figure_list", 'treeplot.svg'))
 
 ```
-![Treeplot](figure_list/treeplot.svg)
+<!-- ![Treeplot](figure_list/treeplot.svg) -->
 
