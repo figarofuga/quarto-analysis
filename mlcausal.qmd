@@ -114,29 +114,18 @@ tidy_dagitty(dag) |>
 
 ## 例えば単純な回帰だと
 
-```{python}
+```{r}
 #| label: simple-regression
 #| results: asis
 
-import pandas as pd
-import numpy as np
-import statsmodels.formula.api as smf
+library(MatchIt)
+library(easystats)
 
+lalonde <- MatchIt::lalonde
 
-fit_ols = smf.ols("re78 ~ treat + age + educ + race_hispan + race_white + married + nodegree + re74 + re75", data = lalonde)
+fit_ols = lm(re78 ~ treat + age + educ + race + married + nodegree + re74 + re75, data = lalonde)
 
-res_ols = fit_ols.fit()
-
-coef_table = (
-    res_ols.summary2().tables[1]
-    .rename(columns={"Coef.": "Coef", "Std.Err.": "Std.Err", "P>|t|": "P"})
-    [["Coef", "Std.Err", "t", "P"]]
-    .round(2)
-    .reset_index()
-    .rename(columns={"index": "term"})
-)
-
-print(coef_table.to_markdown(index=False, tablefmt="pipe"))
+parameters::model_parameters(fit_ols)
 
 
 ```
@@ -145,52 +134,36 @@ print(coef_table.to_markdown(index=False, tablefmt="pipe"))
 
 - 一番有名なのはPropensity score matching
 
-```{python}
+```{r}
 #| label: propensity-score-analysis
 
-import numpy as np
-import pandas as pd
+library(MatchIt)
+library(WeightIt)
+library(marginaleffects)
 
-from causalml.propensity import LogisticRegressionPropensityModel
-from causalml.match import NearestNeighborMatch
+mout <- MatchIt::matchit(treat ~ age + educ + race + married + nodegree + re74 + re75, data = lalonde)
 
-# -----------------------
-# 2) Estimate propensity score with Logistic Regression
-# -----------------------
+m_dat <- MatchIt::match.data(mout)
 
-ps_model = LogisticRegressionPropensityModel()  
-p_score = ps_model.fit_predict(lalonde[["age", "educ", "married", "nodegree", "re74", "re75", "race_hispan", "race_white"]], lalonde["treat"])
+fit_match <- lm(re78 ~ treat * (age + educ + race + married + nodegree + re74 + re75), data = m_dat)
 
-lalonde_pm = (
-  lalonde
-  .assign(propensity_score = p_score)
-  
+marginaleffects::avg_comparisons(
+  fit_match, 
+  variable = "treat", 
+  vcoc = ~subclass, 
+  newdata = subset(treat == 1)
 )
 
-# -----------------------
-# 3) Propensity score matching (Nearest Neighbor)
-# -----------------------
-matcher = NearestNeighborMatch(
-    caliper=0.1,     # PS差がこの範囲以内のみマッチ (例) :contentReference[oaicite:2]{index=2}
-    replace=False,    # 置換なし
-    ratio=1,          # 1:1 matching
-    random_state=42
+wout <- WeightIt::weightit(treat ~ age + educ + race + married + nodegree + re74 + re75, data = lalonde, method = "ipt")
+
+fit_weight <- WeightIt::lm_weightit(
+  re78 ~ treat, 
+  data = lalonde, 
+  weightit = wout, 
+  vcov = "HC0"
 )
 
-matched = matcher.match(
-    data=lalonde_pm,
-    treatment_col="treat",
-    score_cols=["propensity_score"]  # ここにPS列名
-)
-
-print(matched.head())
-print("matched size:", matched.shape)
-
-# -----------------------
-# 4) Simple ATT estimate on matched sample (difference in means)
-# -----------------------
-att = matched.loc[matched["treat"] == 1, "re78"].mean() - matched.loc[matched["treat"] == 0, "re78"].mean()
-print("ATT (diff in means on matched sample):", att)
+fit_weight
 
 ```
 
