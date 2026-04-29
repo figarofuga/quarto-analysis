@@ -120,13 +120,16 @@ tidy_dagitty(dag) |>
 
 library(MatchIt)
 library(easystats)
+library(modelsummary)
 
 lalonde <- MatchIt::lalonde
 
 fit_ols = lm(re78 ~ treat + age + educ + race + married + nodegree + re74 + re75, data = lalonde)
 
-parameters::model_parameters(fit_ols)
-
+modelsummary::modelsummary(
+  fit_ols
+  
+  )
 
 ```
 
@@ -140,6 +143,7 @@ parameters::model_parameters(fit_ols)
 library(MatchIt)
 library(WeightIt)
 library(marginaleffects)
+library(modelsummary)
 
 mout <- MatchIt::matchit(treat ~ age + educ + race + married + nodegree + re74 + re75, data = lalonde)
 
@@ -147,7 +151,7 @@ m_dat <- MatchIt::match.data(mout)
 
 fit_match <- lm(re78 ~ treat * (age + educ + race + married + nodegree + re74 + re75), data = m_dat)
 
-marginaleffects::avg_comparisons(
+match_res <- marginaleffects::avg_comparisons(
   fit_match, 
   variable = "treat", 
   vcoc = ~subclass, 
@@ -156,14 +160,23 @@ marginaleffects::avg_comparisons(
 
 wout <- WeightIt::weightit(treat ~ age + educ + race + married + nodegree + re74 + re75, data = lalonde, method = "ipt")
 
-fit_weight <- WeightIt::lm_weightit(
+weight_res <- WeightIt::lm_weightit(
   re78 ~ treat, 
   data = lalonde, 
   weightit = wout, 
   vcov = "HC0"
 )
 
-fit_weight
+options("modelsummary_factory_default" = "tinytable")
+
+modelsummary::modelsummary(
+  models = list(
+    `PS match` = match_res, 
+    `PS weight` = weight_res
+    ), 
+  estimate = "{estimate} [{conf.low}, {conf.high}]"
+
+)
 
 ```
 
