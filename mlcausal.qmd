@@ -170,7 +170,7 @@ age <- rtruncnorm_simple(
   sd = 8,
   lower = 20,
   upper = 95
-)
+) |> as.integer()
 
 # Sex: 0/1, P(Sex = 0) = 0.40, P(Sex = 1) = 0.60
 sex <- rbinom(n, size = 1, prob = 0.60)
@@ -188,55 +188,51 @@ bmi <- rtrunclnorm_simple(
   upper = 35
 )
 
-# SES: integer 1-5, expected value 3
-# Binomial(4, 0.5) gives 0-4 with mean 2; add 1 gives 1-5 with mean 3
-ses <- rbinom(n, size = 4, prob = 0.5) + 1
+# LVEF: normal with expected value for 55%
+
+lvef <- rtruncnorm_simple(
+  n = n,
+  mean = 52,
+  sd = 8,
+  lower = 15,
+  upper = 75
+) |> as.integer()
+
+
+
 
 # Standardized variables for model coefficients
 age_z <- as.numeric(scale(age))
 bmi_z <- as.numeric(scale(bmi))
-ses_z <- as.numeric(scale(ses))
-
-# ------------------------------------------------------------
-# 2. Comorbidities
-#    Age, Sex, SES -> HF, HTN, Stroke, Frail
-# ------------------------------------------------------------
-
-p_hf <- inv_logit(
-  -2.2 +
-    0.55 * age_z +
-    0.25 * sex -
-    0.30 * ses_z
-)
-
-hf <- rbinom(n, size = 1, prob = p_hf)
-
-p_htn <- inv_logit(
-  -0.6 +
-    0.85 * age_z +
-    0.20 * sex -
-    0.20 * ses_z
-)
-
-htn <- rbinom(n, size = 1, prob = p_htn)
-
-p_stroke <- inv_logit(
-  -2.5 +
-    0.65 * age_z +
-    0.30 * sex -
-    0.25 * ses_z
-)
-
-stroke <- rbinom(n, size = 1, prob = p_stroke)
+lvef_z <- as.numeric(scale(lvef))
 
 p_frail <- inv_logit(
   -1.5 +
     0.95 * age_z +
     0.15 * sex -
-    0.45 * ses_z
+    0.45 * bmi_z
 )
 
-frail <- rbinom(n, size = 1, prob = p_frail)
+frail <- rbinom(n, size = 6, prob = p_frail)
+
+frail_z <- as.numeric(scale(frail))
+
+# ------------------------------------------------------------
+# 2. Comorbidities
+#    Age, Sex, frail -> HF, HTN, Stroke, Frail
+# ------------------------------------------------------------
+
+p_hf <- inv_logit(
+  -1.5 +
+    0.95 * age_z +
+    0.15 * sex -
+    0.45 * bmi_z + 
+    0.3 * lvef_z + 
+    0.2 * frail_z
+)
+
+hf <- rbinom(n, size = 1, prob = p_hf)
+
 
 # ------------------------------------------------------------
 # 3. BNP
@@ -263,16 +259,14 @@ bnp <- bnp_base *
   exp(
     0.20 * age_z +
       0.10 * sex +
-      0.15 * bmi_z -
-      0.10 * ses_z +
-      0.65 * hf +
-      0.20 * htn +
-      0.30 * stroke +
-      0.35 * frail
+      0.15 * bmi_z + 
+      0.4 * lvef_z -
+      0.15 * frail_z 
   )
 
 # Truncate again at 0 and 2000
-bnp <- pmin(pmax(bnp, 0), 2000)
+bnp <- pmin(pmax(bnp, 0), 2000) |> 
+  as.integer()
 
 bnp_z <- as.numeric(scale(log1p(bnp)))
 
@@ -285,9 +279,7 @@ p_palpitation <- inv_logit(
   -1.0 +
     -0.30 * age_z +
     0.35 * sex +
-    0.55 * hf -
-    0.15 * ses_z +
-    0.40 * frail
+    0.40 * frail_z
 )
 
 palpitation <- rbinom(n, size = 1, prob = p_palpitation)
@@ -298,14 +290,15 @@ palpitation <- rbinom(n, size = 1, prob = p_palpitation)
 # ------------------------------------------------------------
 
 p_ca <- inv_logit(
-  -0.8 +
+    -0.8 +
     -0.60 * age_z +
     0.35 * sex +
-    -0.45 * hf +
-    -0.50 * stroke +
-    0.35 * ses_z +
-    -0.55 * frail +
-    -0.25 * bnp_z
+    0.2 * bmi_z +
+    -0.55 * frail_z +
+    -0.25 * bnp_z + 
+    0.6 * palpitation - 
+    0.3 * lvef_z + 
+    0.1 * hf
 )
 
 ca <- rbinom(n, size = 1, prob = p_ca)
@@ -323,6 +316,251 @@ ca <- rbinom(n, size = 1, prob = p_ca)
 bmi_risk <-
   pmax(25 - bmi, 0)^2 +
   0.3 * pmax(bmi - 30, 0)^2
+
+lvef_risk <- 
+  pmax(40 - lvef, 0)^2 +
+  0.3 * pmax(60 - lvef, 0)^2 
+
+
+# ------------------------------------------------------------
+# 7. Heterogeneous treatment effect
+#
+#    Age >= 65:
+#      Treatment benefit becomes larger in proportion to Age x BNP.
+#
+#    Age < 65:
+#      Treatment benefit becomes larger in proportion to Age x BNP x Frail.
+#
+#    The effect is coded on the log-odds scale.
+#    More negative = stronger risk reduction by CA.
+# ------------------------------------------------------------
+
+age_pos <- pmax(age - 65, 0) / 10
+bnp_pos <- log1p(bnp) / log1p(2000)
+
+treatment_effect <- -0.30 - 0.90 * age_pos * bnp_pos * frail_z
+
+# ------------------------------------------------------------
+# 8. Outcome
+#    HF + death composite outcome
+#
+#    Affected by everything except palpitation:
+#    Age, Sex, BMI, SES, HF, HTN, Stroke, Frail, BNP, CA -> Outcome
+#
+#    Palpitation does not directly affect Outcome.
+# ------------------------------------------------------------
+
+linear_predictor_outcome <-
+  -2.0 +
+  0.70 * age_z +
+  0.15 * sex -
+  0.90 * hf +
+  0.85 * frail_z +
+  0.55 * bnp_z +
+  0.04 * bmi_risk + 
+  0.1 * lvef_risk +
+  ca * treatment_effect
+
+p_outcome <- inv_logit(linear_predictor_outcome)
+
+outcome <- rbinom(n, size = 1, prob = p_outcome)
+
+# ------------------------------------------------------------
+# 9. Final dataset
+# ------------------------------------------------------------
+
+toy_data <- data.frame(
+  age = age,
+  sex = sex,
+  bmi = bmi,
+  hf = hf,
+  frail = frail,
+  bnp = bnp,
+  lvef = lvef, 
+  palpitation = palpitation,
+  ca = ca,
+  bmi_risk = bmi_risk,
+  lvef_risk = lvef_risk,
+  treatment_effect = treatment_effect, 
+  p_outcome = p_outcome,
+  outcome = outcome
+)
+
+# ------------------------------------------------------------
+# 10. Quick checks
+# ------------------------------------------------------------
+
+print(head(toy_data))
+print(summary(toy_data))
+
+
+# ------------------------------------------------------------
+# 11. Plot nonlinear BMI risk function
+# ------------------------------------------------------------
+
+bmi_grid <- seq(10, 35, by = 0.1)
+
+bmi_risk_grid <-
+  pmax(25 - bmi_grid, 0)^2 +
+  0.3 * pmax(bmi_grid - 30, 0)^2
+
+plot(
+  bmi_grid,
+  bmi_risk_grid,
+  type = "l",
+  lwd = 2,
+  xlab = "BMI",
+  ylab = "BMI-related risk score",
+  main = "Nonlinear BMI Effect on Outcome"
+)
+
+abline(v = c(25, 30), lty = 2)
+
+# ------------------------------------------------------------
+# 12. Optional: save dataset
+# ------------------------------------------------------------
+
+# write.csv(toy_data, "toy_data.csv", row.names = FALSE)
+# saveRDS(toy_data, "toy_data.rds")
+
+
+```
+
+```{r}
+# ------------------------------------------------------------
+# 13. DAG using ggdag
+# ------------------------------------------------------------
+
+if (requireNamespace("dagitty", quietly = TRUE) &&
+    requireNamespace("ggdag", quietly = TRUE) &&
+    requireNamespace("ggplot2", quietly = TRUE)) {
+
+  library(dagitty)
+  library(ggdag)
+  library(ggplot2)
+
+  dag_text <- "
+  dag {
+
+    Age
+    Sex
+    BMI
+
+    HF
+    Frail
+    BNP
+    LVEF
+    Palpitation
+
+
+    CA
+    Outcome
+
+
+    Age -> Frail
+    Age -> HF
+    Age -> BNP
+    Age -> Palpitation
+    Age -> CA
+    Age -> Outcome
+
+    Sex -> Frail
+    Sex -> HF
+    Sex -> BNP
+    Sex -> Palpitation
+    Sex -> CA
+    Sex -> Outcome
+
+    BMI -> Frail
+    BMI -> HF
+    BMI -> BNP
+    BMI -> CA
+    BMI -> Outcome
+
+    LVEF -> HF
+    LVEF -> BNP
+    LVEF -> CA
+    LVEF -> Outcome
+
+    Frail -> HF
+    Frail -> BNP
+    Frail -> Palpitation
+    Frail -> CA
+    Frail -> Outcome
+
+    BNP -> CA
+    BNP -> Outcome
+
+    Palpitation -> CA
+
+    HF -> CA
+    HF -> Outcome
+
+    CA -> Outcome
+
+
+  }
+  "
+
+  dag <- dagitty(dag_text)
+
+  coordinates(dag) <- list(
+    x = c(
+      Age = 0,
+      Sex = 0,
+      BMI = 0,
+      SES = 0,
+      HF = 1,
+      HTN = 1,
+      Stroke = 1,
+      Frail = 1,
+      BNP = 2,
+      Palpitation = 2,
+      CA = 3,
+      Outcome = 4
+    ),
+    y = c(
+      Age = 4.5,
+      Sex = 3.5,
+      BMI = 2.5,
+      SES = 1.5,
+      HF = 4.5,
+      HTN = 3.5,
+      Stroke = 2.5,
+      Frail = 1.5,
+      BNP = 3.0,
+      Palpitation = 4.2,
+      CA = 2.5,
+      Outcome = 2.8
+    )
+  )
+
+  p_dag <- ggdag(dag, text = FALSE, use_labels = "name") +
+    theme_dag() +
+    labs(
+      title = "DAG for Toy Causal Data with BNP and HTE",
+      subtitle = "Treatment effect of CA varies by Age, BNP, and Frail"
+    )
+
+  print(p_dag)
+
+} else {
+  message("Packages dagitty, ggdag, and ggplot2 are needed for DAG plotting.")
+  message("Run: install.packages(c('dagitty', 'ggdag', 'ggplot2'))")
+}
+
+
+```
+
+```{r}
+#| label: simple-regression
+#| results: asis
+
+library(MatchIt)
+library(easystats)
+library(modelsummary)
+
+lalonde <- MatchIt::lalonde
 
 # ------------------------------------------------------------
 # 7. Heterogeneous treatment effect
