@@ -382,35 +382,18 @@ toy_data <- data.frame(
 print(head(toy_data))
 print(summary(toy_data))
 
+tidyr::pivot_longer(toy_data, cols = everything()) |> 
+  ggplot(aes(x = value)) + 
+  geom_histogram() + 
+  facet_wrap(~name, scales = "free") + 
+  theme_bw()
 
-# ------------------------------------------------------------
-# 11. Plot nonlinear BMI risk function
-# ------------------------------------------------------------
-
-bmi_grid <- seq(10, 35, by = 0.1)
-
-bmi_risk_grid <-
-  pmax(25 - bmi_grid, 0)^2 +
-  0.3 * pmax(bmi_grid - 30, 0)^2
-
-plot(
-  bmi_grid,
-  bmi_risk_grid,
-  type = "l",
-  lwd = 2,
-  xlab = "BMI",
-  ylab = "BMI-related risk score",
-  main = "Nonlinear BMI Effect on Outcome"
-)
-
-abline(v = c(25, 30), lty = 2)
-
-# ------------------------------------------------------------
-# 12. Optional: save dataset
-# ------------------------------------------------------------
-
-# write.csv(toy_data, "toy_data.csv", row.names = FALSE)
-# saveRDS(toy_data, "toy_data.rds")
+dplyr::select(toy_data, bmi, lvef, treatment_effect) |> 
+  tidyr::pivot_longer(cols = -treatment_effect) |> 
+  ggplot(aes(x = value, y = treatment_effect, colour = name)) + 
+  geom_smooth(method = "loess") + 
+  facet_wrap( ~ name, scales = "free") + 
+  theme_bw()
 
 
 ```
