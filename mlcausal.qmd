@@ -430,121 +430,120 @@ abline(v = c(25, 30), lty = 2)
 # ------------------------------------------------------------
 # 13. DAG using ggdag
 # ------------------------------------------------------------
+library(dagitty)
+library(ggdag)
+library(ggplot2)
 
-if (requireNamespace("dagitty", quietly = TRUE) &&
-    requireNamespace("ggdag", quietly = TRUE) &&
-    requireNamespace("ggplot2", quietly = TRUE)) {
+dag_text <- "
+dag {
 
-  library(dagitty)
-  library(ggdag)
-  library(ggplot2)
+  Age
+  Sex
+  BMI
 
-  dag_text <- "
-  dag {
+  HF
+  Frail
+  BNP
+  LVEF
+  Palpitation
 
-    Age
-    Sex
-    BMI
+  CA
+  Outcome
 
-    HF
-    Frail
-    BNP
-    LVEF
-    Palpitation
+  Age -> Frail
+  Age -> HF
+  Age -> BNP
+  Age -> Palpitation
+  Age -> CA
+  Age -> Outcome
 
+  Sex -> Frail
+  Sex -> HF
+  Sex -> BNP
+  Sex -> Palpitation
+  Sex -> CA
+  Sex -> Outcome
 
-    CA
-    Outcome
+  BMI -> Frail
+  BMI -> HF
+  BMI -> BNP
+  BMI -> CA
+  BMI -> Outcome
 
+  LVEF -> HF
+  LVEF -> BNP
+  LVEF -> CA
+  LVEF -> Outcome
 
-    Age -> Frail
-    Age -> HF
-    Age -> BNP
-    Age -> Palpitation
-    Age -> CA
-    Age -> Outcome
+  Frail -> HF
+  Frail -> BNP
+  Frail -> Palpitation
+  Frail -> CA
+  Frail -> Outcome
 
-    Sex -> Frail
-    Sex -> HF
-    Sex -> BNP
-    Sex -> Palpitation
-    Sex -> CA
-    Sex -> Outcome
+  BNP -> CA
+  BNP -> Outcome
 
-    BMI -> Frail
-    BMI -> HF
-    BMI -> BNP
-    BMI -> CA
-    BMI -> Outcome
+  Palpitation -> CA
 
-    LVEF -> HF
-    LVEF -> BNP
-    LVEF -> CA
-    LVEF -> Outcome
+  HF -> CA
+  HF -> Outcome
 
-    Frail -> HF
-    Frail -> BNP
-    Frail -> Palpitation
-    Frail -> CA
-    Frail -> Outcome
-
-    BNP -> CA
-    BNP -> Outcome
-
-    Palpitation -> CA
-
-    HF -> CA
-    HF -> Outcome
-
-    CA -> Outcome
-
-
-  }
-  "
-
-  dag <- dagitty(dag_text)
-
-  coordinates(dag) <- list(
-    x = c(
-      Age = 0,
-      Sex = 0,
-      BMI = 0,
-      HF = 2,
-      Frail = 1,
-      LVEF = 1,
-      BNP = 2,
-      Palpitation = 2,
-      CA = 3,
-      Outcome = 4
-    ),
-    y = c(
-      Age = 4.5,
-      Sex = 3.5,
-      BMI = 2.5,
-      HF = 4.5,
-      LVEF = 4.5,
-      Frail = 1.5,
-      BNP = 3.0,
-      Palpitation = 4.2,
-      CA = 2.5,
-      Outcome = 2.8
-    )
-  )
-
-  p_dag <- ggdag(dag, text = FALSE, use_labels = "name") +
-    theme_dag() +
-    labs(
-      title = "DAG for Toy Causal Data with BNP and HTE",
-      subtitle = "Treatment effect of CA varies by Age, BNP, and Frail"
-    )
-
-  print(p_dag)
-
-} else {
-  message("Packages dagitty, ggdag, and ggplot2 are needed for DAG plotting.")
-  message("Run: install.packages(c('dagitty', 'ggdag', 'ggplot2'))")
+  CA -> Outcome
 }
+"
 
+dag <- dagitty(dag_text)
+
+coordinates(dag) <- list(
+  x = c(
+    # background / baseline
+    Age = 0,
+    Sex = 0,
+    BMI = 0,
+    LVEF = 0,
+
+    # intermediate layer 1
+    Frail = 1,
+
+    # intermediate layer 2
+    HF = 2,
+    BNP = 2,
+    Palpitation = 2,
+
+    # treatment
+    CA = 3,
+
+    # outcome
+    Outcome = 4
+  ),
+  y = c(
+    # background / baseline
+    Age = 4,
+    Sex = 3,
+    BMI = 2,
+    LVEF = 1,
+
+    # intermediate layer 1
+    Frail = 2.8,
+
+    # intermediate layer 2
+    HF = 3.8,
+    BNP = 2.6,
+    Palpitation = 1.4,
+
+    # treatment and outcome
+    CA = 2.4,
+    Outcome = 2.4
+  )
+)
+
+ggdag(dag, text = FALSE, use_labels = "name") +
+  theme_dag() +
+  labs(
+    title = "DAG for Toy Causal Data",
+    subtitle = "Hierarchical layout ending with CA → Outcome"
+  )
 
 ```
 
