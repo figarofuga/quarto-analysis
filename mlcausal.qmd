@@ -195,20 +195,15 @@ age_z <- as.numeric(scale(age))
 bmi_z <- as.numeric(scale(bmi))
 lvef_z <- as.numeric(scale(lvef))
 
-p_frail <- inv_logit(
-  -1.5 +
-    0.95 * age_z +
-    0.15 * sex -
-    0.45 * bmi_z
-)
+p_SES <- 0.625
+  
+SES <- rbinom(n, size = 4, prob = p_SES)
 
-frail <- rbinom(n, size = 6, prob = p_frail)
-
-frail_z <- as.numeric(scale(frail))
+SES_z <- as.numeric(scale(SES))
 
 # ------------------------------------------------------------
 # 2. Comorbidities
-#    Age, Sex, frail -> HF, HTN, Stroke, Frail
+#    Age, Sex, SES -> HF, HTN, Stroke, SES
 # ------------------------------------------------------------
 
 p_hf <- inv_logit(
@@ -217,7 +212,7 @@ p_hf <- inv_logit(
     0.15 * sex -
     0.45 * bmi_z + 
     0.3 * lvef_z + 
-    0.2 * frail_z
+    0.2 * SES_z
 )
 
 hf <- rbinom(n, size = 1, prob = p_hf)
@@ -229,7 +224,7 @@ hf <- rbinom(n, size = 1, prob = p_hf)
 #    expected value approximately 150 before truncation.
 #
 #    BNP is affected by:
-#    Age, Sex, BMI, SES, HF, HTN, Stroke, Frail
+#    Age, Sex, BMI, SES, HF, HTN, Stroke, SES
 # ------------------------------------------------------------
 
 sdlog_bnp <- 0.90
@@ -249,8 +244,7 @@ bnp <- bnp_base *
     0.20 * age_z +
       0.10 * sex +
       0.15 * bmi_z + 
-      0.4 * lvef_z -
-      0.15 * frail_z 
+      0.4 * lvef_z 
   )
 
 # Truncate again at 0 and 2000
@@ -261,21 +255,21 @@ bnp_z <- as.numeric(scale(log1p(bnp)))
 
 # ------------------------------------------------------------
 # 4. Palpitation
-#    Age, Sex, HF, SES, Frail -> Palpitation
+#    Age, Sex, HF, SES, SES -> Palpitation
 # ------------------------------------------------------------
 
 p_palpitation <- inv_logit(
   -1.0 +
     -0.30 * age_z +
     0.35 * sex +
-    0.40 * frail_z
+    0.40 * SES_z
 )
 
 palpitation <- rbinom(n, size = 1, prob = p_palpitation)
 
 # ------------------------------------------------------------
 # 5. Treatment / intervention
-#    CA is affected by Age, Sex, HF, Stroke, SES, Frail, BNP
+#    CA is affected by Age, Sex, HF, Stroke, SES, SES, BNP
 # ------------------------------------------------------------
 
 p_ca <- inv_logit(
@@ -283,7 +277,7 @@ p_ca <- inv_logit(
     -0.60 * age_z +
     0.35 * sex +
     0.2 * bmi_z +
-    -0.55 * frail_z +
+    0.35 * SES_z +
     -0.25 * bnp_z + 
     0.6 * palpitation - 
     0.3 * lvef_z + 
@@ -318,7 +312,7 @@ lvef_risk <-
 #      Treatment benefit becomes larger in proportion to Age x BNP.
 #
 #    Age < 65:
-#      Treatment benefit becomes larger in proportion to Age x BNP x Frail.
+#      Treatment benefit becomes larger in proportion to Age x BNP x SES.
 #
 #    The effect is coded on the log-odds scale.
 #    More negative = stronger risk reduction by CA.
@@ -327,14 +321,18 @@ lvef_risk <-
 age_pos <- pmax(age - 65, 0) / 10
 bnp_pos <- log1p(bnp) / log1p(2000)
 
-treatment_effect <- -0.30 - 0.90 * age_pos * bnp_pos * frail_z
+treatment_effect <- ifelse(
+  sex == 1,
+  -0.30 - 0.90 * age_pos + 0.2 * bnp_pos + 0.1 * scale(bmi_risk) * scale(lvef_risk), 
+  -0.50 - 0.80 * age_pos + 0.2 * bnp_pos + 0.3 * scale(bmi_risk) * scale(lvef_risk)
+  )
 
 # ------------------------------------------------------------
 # 8. Outcome
 #    HF + death composite outcome
 #
 #    Affected by everything except palpitation:
-#    Age, Sex, BMI, SES, HF, HTN, Stroke, Frail, BNP, CA -> Outcome
+#    Age, Sex, BMI, SES, HF, HTN, Stroke, SES, BNP, CA -> Outcome
 #
 #    Palpitation does not directly affect Outcome.
 # ------------------------------------------------------------
@@ -344,7 +342,7 @@ linear_predictor_outcome <-
   0.70 * age_z +
   0.15 * sex -
   0.90 * hf +
-  0.85 * frail_z +
+  0.85 * SES_z +
   0.55 * bnp_z +
   0.04 * bmi_risk + 
   0.1 * lvef_risk +
@@ -363,7 +361,7 @@ toy_data <- data.frame(
   sex = sex,
   bmi = bmi,
   hf = hf,
-  frail = frail,
+  SES = SES,
   bnp = bnp,
   lvef = lvef, 
   palpitation = palpitation,
@@ -404,6 +402,7 @@ dplyr::select(toy_data, bmi, lvef, treatment_effect) |>
 library(dagitty)
 library(ggdag)
 library(ggplot2)
+library(dplyr)
 
 dag_text <- "
 dag {
@@ -413,7 +412,7 @@ dag {
   BMI
 
   HF
-  Frail
+  SES
   BNP
   LVEF
   Palpitation
@@ -421,21 +420,18 @@ dag {
   CA
   Outcome
 
-  Age -> Frail
   Age -> HF
   Age -> BNP
   Age -> Palpitation
   Age -> CA
   Age -> Outcome
 
-  Sex -> Frail
   Sex -> HF
   Sex -> BNP
   Sex -> Palpitation
   Sex -> CA
   Sex -> Outcome
 
-  BMI -> Frail
   BMI -> HF
   BMI -> BNP
   BMI -> CA
@@ -446,19 +442,18 @@ dag {
   LVEF -> CA
   LVEF -> Outcome
 
-  Frail -> HF
-  Frail -> BNP
-  Frail -> Palpitation
-  Frail -> CA
-  Frail -> Outcome
+  SES -> HF
+  SES -> Palpitation
+  SES -> CA
+  SES -> Outcome
 
   BNP -> CA
   BNP -> Outcome
 
-  Palpitation -> CA
-
   HF -> CA
   HF -> Outcome
+  
+  Palpitation -> CA
 
   CA -> Outcome
 }
@@ -475,37 +470,35 @@ coordinates(dag) <- list(
     LVEF = 0,
 
     # intermediate layer 1
-    Frail = 1,
+    SES = 0,
 
     # intermediate layer 2
-    HF = 2,
-    BNP = 2,
-    Palpitation = 2,
+    HF = 1,
+    BNP = 1,
+    Palpitation = 1,
 
     # treatment
-    CA = 3,
+    CA = 2,
 
     # outcome
     Outcome = 4
   ),
   y = c(
     # background / baseline
-    Age = 4,
-    Sex = 3,
-    BMI = 2,
-    LVEF = 1,
-
-    # intermediate layer 1
-    Frail = 2.8,
+    Age = 5,
+    Sex = 4,
+    BMI = 3,
+    LVEF = 2,
+    SES = 1,
 
     # intermediate layer 2
-    HF = 3.8,
-    BNP = 2.6,
-    Palpitation = 1.4,
+    HF = 5,
+    BNP = 3,
+    Palpitation = 1,
 
     # treatment and outcome
-    CA = 2.4,
-    Outcome = 2.4
+    CA = 3,
+    Outcome = 3
   )
 )
 
@@ -513,7 +506,7 @@ coordinates(dag) <- list(
 dag_df <- tidy_dagitty(dag) %>%
   mutate(
     node_type = case_when(
-      name == "Frail"   ~ "Unobserved confounder",
+      name == "SES"   ~ "Unobserved confounder",
       name == "CA"      ~ "Intervention",
       name == "Outcome" ~ "Outcome",
       TRUE              ~ "Confounder"
@@ -550,7 +543,12 @@ library(rms)
 library(easystats)
 library(modelsummary)
 
+options(prType='html') 
 
+dd <- rms::datadist(toy_data)
+options(datadist = "dd")
+
+Hmisc::describe(toy_data)
 
 ```
 
