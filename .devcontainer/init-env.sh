@@ -8,7 +8,7 @@ set -e
 echo ">>> 1. R Setup <<<"
 # CmdStanRのインストールとCmdStan本体のセットアップ
 # brms等のインストール (Linuxバイナリを使う設定になっているので高速です)
-Rscript -e "install.packages(c('DiagrammeR', 'DiagrammeRsvg', 'rsvg', 'reticulate', 'tidyverse', 'tidymodels', 'partykit', 'ranger', 'xgboost', 'censored', 'easystats', 'mlr3', 'mlr3learners', 'mlr3extralearners', 'mlr3proba', 'survivalmodels', 'here', 'data.table', 'modelsummary', 'broom', 'MatchIt', 'WeightIt', 'cobalt', 'highs', 'rootSolve', 'rms', 'Hmisc', 'marginaleffects', 'grf', 'policytree', 'SuperLearner', 'tmle', 'AIPW', 'DoubleML', 'survival', 'flexsurv', 'survtmle', 'ggdag', 'tinyplot', 'tinytable', 'dagitty', 'prodlim', 'riskRegression', 'Matrix', 'pseudo'))"
+Rscript -e "install.packages(c('jgd', 'DiagrammeR', 'DiagrammeRsvg', 'rsvg', 'reticulate', 'tidyverse', 'tidymodels', 'partykit', 'ranger', 'xgboost', 'censored', 'easystats', 'mlr3', 'mlr3learners', 'mlr3extralearners', 'mlr3proba', 'survivalmodels', 'here', 'data.table', 'modelsummary', 'broom', 'MatchIt', 'WeightIt', 'cobalt', 'highs', 'rootSolve', 'rms', 'Hmisc', 'marginaleffects', 'grf', 'policytree', 'SuperLearner', 'tmle', 'AIPW', 'DoubleML', 'survival', 'flexsurv', 'survtmle', 'ggdag', 'tinyplot', 'tinytable', 'dagitty', 'prodlim', 'riskRegression', 'Matrix', 'pseudo'))"
 
 # -----------------------------------------------------------------------------
 # 2. Python Setup (uv & PyMC/Bambi)
@@ -52,8 +52,24 @@ echo "Configuring Reticulate and Radian..."
 
 # 1. .Rprofile に RETICULATE_PYTHON を設定
 # これにより、Rを起動した瞬間に uv の Python が認識されます
-if ! grep -q "RETICULATE_PYTHON" .Rprofile 2>/dev/null; then
-  echo 'Sys.setenv(RETICULATE_PYTHON = file.path(getwd(), ".venv", "bin", "python"))' >> .Rprofile
+touch .Rprofile
+
+if ! grep -q "RETICULATE_PYTHON" .Rprofile; then
+  cat >> .Rprofile <<'EOF'
+
+Sys.setenv(RETICULATE_PYTHON = file.path(getwd(), ".venv", "bin", "python"))
+EOF
+fi
+
+if ! grep -q "jgd::jgd" .Rprofile; then
+  cat >> .Rprofile <<'EOF'
+
+if (interactive() &&
+    Sys.getenv("TERM_PROGRAM") == "vscode" &&
+    Sys.getenv("POSITRON") != "1") {
+  jgd::jgd()
+}
+EOF
 fi
 
 # -----------------------------------------------------------------------------
