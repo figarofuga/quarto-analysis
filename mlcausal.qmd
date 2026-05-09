@@ -402,6 +402,7 @@ dplyr::select(toy_data, bmi, lvef, treatment_effect) |>
 library(dagitty)
 library(ggdag)
 library(ggplot2)
+library(grid)
 library(dplyr)
 
 dag_text <- "
@@ -502,35 +503,130 @@ coordinates(dag) <- list(
   )
 )
 
-
 dag_df <- tidy_dagitty(dag) %>%
   mutate(
     node_type = case_when(
-      name == "SES"   ~ "Unobserved confounder",
+      name == "Frail"   ~ "Unobserved confounder",
       name == "CA"      ~ "Intervention",
       name == "Outcome" ~ "Outcome",
       TRUE              ~ "Confounder"
     )
   )
 
-ggplot(dag_df, aes(x = x, y = y, xend = xend, yend = yend)) +
-  geom_dag_edges() +
-  geom_dag_point(aes(fill = node_type), shape = 21, color = "black", size = 18) +
-  geom_dag_text(aes(label = name), color = "black", size = 3.8) +
-  scale_fill_manual(
-    values = c(
-      "Confounder" = "#4C78A8",
-      "Unobserved confounder" = "#F58518",
-      "Intervention" = "#E45756",
-      "Outcome" = "#54A24B"
+node_df <- dag_df$data %>%
+  distinct(name, x, y, node_type)
+
+edge_df <- dag_df$data %>%
+    filter(!is.na(xend), !is.na(yend)) %>%
+    distinct(name, x, y, xend, yend) %>%
+    mutate(
+        edge_type = case_when(
+            name == "CA" & xend == node_df$x[node_df$name == "Outcome"] &
+                yend == node_df$y[node_df$name == "Outcome"] ~ "CA_to_Outcome",
+            yend > y ~ "up",
+            yend < y ~ "down",
+            TRUE ~ "flat"
+        )
+    ) %>%
+    mutate(
+        dx = xend - x,
+        dy = yend - y,
+        dist = sqrt(dx^2 + dy^2),
+        
+        # arrow head が node に隠れないように終点を少し手前にする
+        shorten = 0.18,
+        xend2 = xend - shorten * dx / dist,
+        yend2 = yend - shorten * dy / dist
     )
-  ) +
-  theme_dag() +
-  labs(
-    title = "DAG for Toy Causal Data",
-    subtitle = "Hierarchical layout ending with CA → Outcome",
-    fill = "Node type"
-  )
+
+ggplot() +
+    # upward curved arrows
+    geom_curve(
+        data = filter(edge_df, edge_type == "up"),
+        aes(x = x, y = y, xend = xend2, yend = yend2),
+        curvature = 0.18,
+        angle = 90,
+        ncp = 10,
+        linewidth = 0.7,
+        color = "grey35",
+        arrow = grid::arrow(
+            length = unit(0.14, "inches"),
+            type = "closed"
+        )
+    ) +
+    
+    # downward curved arrows
+    geom_curve(
+        data = filter(edge_df, edge_type == "down"),
+        aes(x = x, y = y, xend = xend2, yend = yend2),
+        curvature = -0.18,
+        angle = 90,
+        ncp = 10,
+        linewidth = 0.7,
+        color = "grey35",
+        arrow = grid::arrow(
+            length = unit(0.14, "inches"),
+            type = "closed"
+        )
+    ) +
+    
+    # flat curved arrows except CA -> Outcome
+    geom_curve(
+        data = filter(edge_df, edge_type == "flat"),
+        aes(x = x, y = y, xend = xend2, yend = yend2),
+        curvature = 0.08,
+        angle = 90,
+        ncp = 10,
+        linewidth = 0.7,
+        color = "grey35",
+        arrow = grid::arrow(
+            length = unit(0.14, "inches"),
+            type = "closed"
+        )
+    ) +
+    
+    # CA -> Outcome only: straight arrow
+    geom_segment(
+        data = filter(edge_df, edge_type == "CA_to_Outcome"),
+        aes(x = x, y = y, xend = xend2, yend = yend2),
+        linewidth = 0.9,
+        color = "grey20",
+        arrow = grid::arrow(
+            length = unit(0.16, "inches"),
+            type = "closed"
+        )
+    ) +
+    
+    # nodes
+    geom_point(
+        data = node_df,
+        aes(x = x, y = y, fill = node_type),
+        shape = 21,
+        color = "black",
+        size = 18
+    ) +
+    
+    geom_text(
+        data = node_df,
+        aes(x = x, y = y, label = name),
+        size = 3.8
+    ) +
+    
+    scale_fill_manual(
+        values = c(
+            "Confounder" = "#4C78A8",
+            "Unobserved confounder" = "#F58518",
+            "Intervention" = "#E45756",
+            "Outcome" = "#54A24B"
+        )
+    ) +
+    
+    theme_dag() +
+    labs(
+        title = "DAG for Toy Causal Data",
+        subtitle = "Hierarchical layout ending with CA → Outcome",
+        fill = "Node type"
+    )
 
 
 ```
