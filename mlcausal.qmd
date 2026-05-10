@@ -343,6 +343,28 @@ p_outcome <- inv_logit(linear_predictor_outcome)
 
 outcome <- rbinom(n, size = 1, prob = p_outcome)
 
+afeqt_mean <- (
+  75 + 
+  -4 * age_z + 
+  2.0 * sex + 
+  -2.0 * bmi_z + 
+  -8.0 * hf + 
+  3.0 * SES_z + 
+  -5.0 * bnp_z + 
+  3.0 * lvef_z + 
+  -10.0 * palpitation + 
+  6.0 * ca
+)
+
+afeqt_os <- rtruncnorm_simple(
+  n = n, 
+  mean = afeqt_mean, 
+  sd = 12, 
+  lower = 0, 
+  upper = 100
+) 
+  
+
 # ------------------------------------------------------------
 # 9. Final dataset
 # ------------------------------------------------------------
@@ -361,7 +383,8 @@ toy_data <- tibble::tibble(
   lvef_risk = lvef_risk,
   treatment_effect = treatment_effect, 
   p_outcome = p_outcome,
-  outcome = outcome
+  outcome = outcome, 
+  afeqt_os = afeqt_os
 )
 
 # ------------------------------------------------------------
@@ -633,12 +656,9 @@ library(modelsummary)
 
 options(prType='html') 
 
-dd <- rms::datadist(toy_data)
-options(datadist = "dd")
+simple_fit <- glm(outcome ~ age + sex + bmi + hf + bnp + lvef + ca, family = binomial, data = toy_data)
 
-simple_fit <- lrm(outcome ~ age + sex + bmi + hf + bnp + lvef + ca, data = toy_data)
-
-rcs_fit <- lrm(outcome ~ rcs(age, 4) + sex + rcs(bmi, 4) + hf + rcs(bnp, 4) + rcs(lvef, 4) + ca, data = toy_data)
+rcs_fit <- glm(outcome ~ rcs(age, 4) + sex + rcs(bmi, 4) + hf + rcs(bnp, 4) + rcs(lvef, 4) + ca, family = binomial, data = toy_data)
 
 modelsummary::modelsummary(list(
   simple = simple_fit, 
