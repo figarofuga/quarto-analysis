@@ -406,7 +406,6 @@ dplyr::select(toy_data, bmi, lvef, treatment_effect) |>
   facet_wrap( ~ name, scales = "free") + 
   theme_bw()
 
-
 ```
 
 ```{r}

@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="mlcausal_files/libs/clipboard/clipboard.min.js"></script>
+<script src="mlcausal_files/libs/quarto-html/tabby.min.js"></script>
+<script src="mlcausal_files/libs/quarto-html/popper.min.js"></script>
+<script src="mlcausal_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="mlcausal_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="mlcausal_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="mlcausal_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.9.37">
+
+  <meta name="author" content="Nozomi Niimi">
+  <meta name="dcterms.date" content="2026-05-09">
+  <title>機械学習を用いた因果推論</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="mlcausal_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="mlcausal_files/libs/revealjs/dist/reveal.css">
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="mlcausal_files/libs/revealjs/dist/theme/quarto-afaf7e9a7fe9cdd749cc3dd7e961dfa5.css">
+  <link href="mlcausal_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="mlcausal_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="mlcausal_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="mlcausal_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+  <link href="mlcausal_files/libs/htmltools-fill-0.5.9/fill.css" rel="stylesheet">
+  <script src="mlcausal_files/libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+  <script src="mlcausal_files/libs/viz-1.8.2/viz.js"></script>
+  <link href="mlcausal_files/libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet">
+  <script src="mlcausal_files/libs/grViz-binding-1.0.11/grViz.js"></script>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" class="quarto-title-block center">
+  <h1 class="title">機械学習を用いた因果推論</h1>
+
+<div class="quarto-title-authors">
+<div class="quarto-title-author">
+<div class="quarto-title-author-name">
+Nozomi Niimi 
+</div>
+</div>
+</div>
+
+  <p class="date">May 9, 2026</p>
+</section>
+<section>
+<section id="因果推論-at-glance" class="title-slide slide level1 center">
+<h1>因果推論 at glance</h1>
+
+</section>
+<section id="因果関係" class="slide level2">
+<h2>因果関係</h2>
+<ul>
+<li>医学研究の第一の目標と言っても過言ではない</li>
+<li>Aの薬を使うと患者の予後は良くなるか？</li>
+<li>実際は口で言うほど簡単ではない</li>
+</ul>
+</section>
+<section id="因果関係の考え方" class="slide level2">
+<h2>因果関係の考え方</h2>
+<ul>
+<li>大きく分けて2つの考え方がある
+<ul>
+<li>潜在的アウトカムを考えるRubin流</li>
+<li>DAGを作り、do operatorを使うPearl流</li>
+</ul></li>
+<li>詳細は省くが、今回はPearl流のDAGを中心に考える</li>
+</ul>
+</section>
+<section id="dagの基本" class="slide level2">
+<h2>DAGの基本</h2>
+
+<img data-src="mlcausal_files/figure-revealjs/DAG-1.png" width="960" class="r-stretch"></section>
+<section id="通常の統計学的手法" class="slide level2">
+<h2>通常の統計学的手法</h2>
+<ul>
+<li>通常は交絡因子の調整により因果関係を推測する</li>
+</ul>
+</section>
+<section id="交絡因子の調整の方法" class="slide level2">
+<h2>交絡因子の調整の方法</h2>
+<ul>
+<li>回帰</li>
+<li>Matching</li>
+<li>層別化</li>
+</ul>
+</section>
+<section id="例えば単純な回帰だと" class="slide level2">
+<h2>例えば単純な回帰だと</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>  age sex      bmi hf SES  bnp lvef palpitation ca   bmi_risk lvef_risk
+1  55   1 28.95521  0   3   46   59           0  1  0.0000000       0.3
+2  58   1 21.31040  0   3  344   46           0  1 13.6131767      58.8
+3  72   1 31.84002  0   3 1078   56           1  0  1.0156997       4.8
+4  60   1 20.14267  0   2   41   50           0  0 23.5936843      30.0
+5  61   1 28.45924  0   3  154   50           0  1  0.0000000      30.0
+6  73   0 31.51410  1   2  102   56           0  0  0.6877521       4.8
+  treatment_effect  p_outcome outcome
+1       -0.1599875 0.08318169       0
+2       -0.1429188 0.99535336       1
+3       -0.7148389 0.81193623       1
+4       -0.2140512 0.76373335       1
+5       -0.1561011 0.85263216       1
+6       -0.9207888 0.15743165       1</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      age             sex              bmi              hf        
+ Min.   :35.00   Min.   :0.0000   Min.   :12.38   Min.   :0.0000  
+ 1st Qu.:54.00   1st Qu.:0.0000   1st Qu.:21.31   1st Qu.:0.0000  
+ Median :59.00   Median :1.0000   Median :24.29   Median :0.0000  
+ Mean   :59.61   Mean   :0.6113   Mean   :24.58   Mean   :0.2433  
+ 3rd Qu.:65.00   3rd Qu.:1.0000   3rd Qu.:27.75   3rd Qu.:0.0000  
+ Max.   :87.00   Max.   :1.0000   Max.   :34.94   Max.   :1.0000  
+      SES             bnp              lvef        palpitation    
+ Min.   :0.000   Min.   :   2.0   Min.   :26.00   Min.   :0.0000  
+ 1st Qu.:2.000   1st Qu.:  52.0   1st Qu.:46.00   1st Qu.:0.0000  
+ Median :3.000   Median : 104.0   Median :52.00   Median :0.0000  
+ Mean   :2.518   Mean   : 171.4   Mean   :51.47   Mean   :0.3213  
+ 3rd Qu.:3.000   3rd Qu.: 202.0   3rd Qu.:57.00   3rd Qu.:1.0000  
+ Max.   :4.000   Max.   :2000.0   Max.   :74.00   Max.   :1.0000  
+       ca            bmi_risk         lvef_risk      treatment_effect 
+ Min.   :0.0000   Min.   :  0.000   Min.   :  0.00   Min.   :-2.8444  
+ 1st Qu.:0.0000   1st Qu.:  0.000   1st Qu.:  2.70   1st Qu.:-0.4465  
+ Median :0.0000   Median :  1.565   Median : 19.20   Median :-0.2656  
+ Mean   :0.4197   Mean   : 11.201   Mean   : 42.09   Mean   :-0.3532  
+ 3rd Qu.:1.0000   3rd Qu.: 13.620   3rd Qu.: 58.80   3rd Qu.:-0.1726  
+ Max.   :1.0000   Max.   :159.253   Max.   :542.80   Max.   : 3.6520  
+   p_outcome           outcome      
+ Min.   :0.003246   Min.   :0.0000  
+ 1st Qu.:0.231579   1st Qu.:0.0000  
+ Median :0.647907   Median :1.0000  
+ Mean   :0.599546   Mean   :0.5933  
+ 3rd Qu.:0.984428   3rd Qu.:1.0000  
+ Max.   :1.000000   Max.   :1.0000  </code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="mlcausal_files/figure-revealjs/Make-ToyData-1.png" width="960"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="mlcausal_files/figure-revealjs/Make-ToyData-2.png" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="mlcausal_files/figure-revealjs/DAG-for-ToyData-1.png" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="data-at-glance" class="slide level2">
+<h2>Data at glance</h2>
+<div class="cell">
+<div class="cell-output-display">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<style>
+.earrows {color:silver;font-size:11px;}
+
+fcap {
+ font-family: Verdana;
+ font-size: 12px;
+ color: MidnightBlue
+ }
+
+smg {
+ font-family: Verdana;
+ font-size: 10px;
+ color: &#808080;
+}
+
+hr.thinhr { margin-top: 0.15em; margin-bottom: 0.15em; }
+
+span.xscript {
+position: relative;
+}
+span.xscript sub {
+position: absolute;
+left: 0.1em;
+bottom: -1ex;
+}
+</style>
+
+<title>toy_data Descriptives</title>
+<font color="MidnightBlue"><div align="center"><span style="font-weight:bold">toy_data <br><br> 14  Variables   3000  Observations</span></div></font>
+<hr class="thinhr">
+<span style="font-weight:bold">age</span><div style="float: right; text-align: right;"><img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAAJcAAAANCAMAAACTvAxuAAAB6VBMVEUAAAABAQEDAwMGBgYHBwcICAgJCQkNDQ0ODg4PDw8QEBASEhIUFBQWFhYXFxcYGBgZGRkcHBweHh4hISEjIyMkJCQmJiYnJycqKiosLCwvLy8xMTEzMzM3Nzc4ODg6Ojo7Ozs8PDw+Pj4/Pz9BQUFCQkJDQ0NERERHR0dISEhKSkpMTExNTU1OTk5PT09QUFBSUlJWVlZYWFhZWVlbW1tcXFxfX19gYGBhYWFiYmJnZ2doaGhra2tsbGxubm5vb29wcHBxcXF2dnZ3d3d4eHh5eXl6enp8fHx/f3+BgYGCgoKDg4OEhISFhYWHh4eIiIiKioqLi4uPj4+QkJCRkZGSkpKTk5OUlJSVlZWXl5eYmJiZmZmampqbm5ucnJydnZ2fn5+goKCioqKjo6OkpKSlpaWoqKiqqqqrq6utra2urq6wsLCzs7O2tra4uLi8vLy9vb2/v7/AwMDBwcHCwsLExMTFxcXIyMjJycnKysrLy8vMzMzNzc3Q0NDR0dHS0tLT09PU1NTV1dXW1tbX19fY2NjZ2dna2trf39/g4ODh4eHi4uLj4+Pl5eXm5ubo6Ojp6enq6urr6+vt7e3u7u7w8PDx8fHy8vL09PT29vb39/f4+Pj5+fn6+vr7+/v8/Pz9/f3+/v7///9gd9S9AAACF0lEQVQ4jcXV3VMSURgG8IegRMs0rVRaMzXD0iyopKB0gzDJMkszwSJKJMnAUBL6ABWRTVChU9pmVnD+0o7UVBdO4wJjz8W7s7M7z/nNe3NA8s7VPaS2kT1XbCtszs3k38gCmnOi79gQhzbMClqvpu+/+eGPDtAWde6NfyVXV+YLPXqWXo948SrryhTd9cF3Q5ZW129+Tv4v163DlGsVcceDQNaVhoW5LNh0Dc/Py6ZfajM76bpwk42UcZ0vybr6tnLt7grA0weR/Rn5uEOuag0bzzDzL5fC/NPFa+h+U64uQUKeWoRDp4Se6ft4rlMKNU1hGO0Y08sFrm4BHSMY6cBCHSfI9WOwGxFuqhGUOuGNlBN+R9K+DOVsXx8w5EZ4O/tq5WgJv7hrUpyk8Vmp+9rmf+5PPiUxlDEXwaAUVxjuYdnqeVXBXbMeap1YxmMnhBxdgyCaanrynngmUgBXYIns9QePf754kFa2J2DP11VmEOBcNH9/YZPqWhdpZJVu0Mjl9LUWeuBKDKN2JNorC+h6hCXWd8Ly1SCsjWaeXKLJNXbgVi52F512suHikpoGsq8zpPDcRqytipTqArD1I6StIBXaEPqtCOpKSVVbDL0OTOmLiao5jm4XvLyc3Y8pmMYxbkKqsZbIeS9c3Yg3q0ixfgqO3l99QVj/9A08xGvWd+RcosgxUT7HBHxPknO9PRZ90MBefgBgT7wPuEDUkAAAAABJRU5ErkJggg==" alt="image"></div>
+<style>
+ .hmisctable665442 {
+ border: none;
+ font-size: 85%;
+ }
+ .hmisctable665442 td {
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable665442 th {
+ color: MidnightBlue;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: normal;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable665442">
+ <tbody><tr><th>n</th><th>missing</th><th>distinct</th><th>Info</th><th>Mean</th><th>pMedian</th><th>Gmd</th><th>.05</th><th>.10</th><th>.25</th><th>.50</th><th>.75</th><th>.90</th><th>.95</th></tr>
+ <tr><td>3000</td><td>0</td><td>51</td><td>0.999</td><td>59.61</td><td>59.5</td><td>8.968</td><td>46</td><td>50</td><td>54</td><td>59</td><td>65</td><td>70</td><td>73</td></tr>
+ </tbody></table>
+
+<span style="font-size: 85%;"><font color="MidnightBlue">lowest</font>&nbsp;: 35 37 38 39 40 ,  <font color="MidnightBlue">highest</font>: 82 84 85 86 87</span>
+<hr class="thinhr">
+<span style="font-weight:bold">sex</span>
+<style>
+ .hmisctable313378 {
+ border: none;
+ font-size: 85%;
+ }
+ .hmisctable313378 td {
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable313378 th {
+ color: MidnightBlue;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: normal;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable313378">
+ <tbody><tr><th>n</th><th>missing</th><th>distinct</th><th>Info</th><th>Sum</th><th>Mean</th></tr>
+ <tr><td>3000</td><td>0</td><td>2</td><td>0.713</td><td>1834</td><td>0.6113</td></tr>
+ </tbody></table>
+
+<hr class="thinhr">
+<span style="font-weight:bold">bmi</span><div style="float: right; text-align: right;"><img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAAJcAAAANCAMAAACTvAxuAAACK1BMVEUAAAABAQECAgIEBAQFBQUGBgYHBwcICAgJCQkKCgoLCwsMDAwNDQ0ODg4PDw8QEBARERESEhITExMUFBQVFRUWFhYXFxcYGBgZGRkaGhobGxscHBwdHR0eHh4fHx8gICAhISEiIiIjIyMkJCQlJSUmJiYnJycoKCgpKSkqKiorKyssLCwtLS0uLi4xMTEyMjIzMzM0NDQ1NTU2NjY4ODg5OTk6Ojo7Ozs8PDw+Pj5AQEBBQUFCQkJDQ0NFRUVGRkZHR0dISEhJSUlKSkpMTExNTU1PT09QUFBSUlJTU1NUVFRVVVVXV1dYWFhbW1tcXFxeXl5fX19gYGBhYWFiYmJjY2NkZGRmZmZnZ2doaGhra2ttbW1ubm5xcXFzc3N0dHR3d3d5eXl6enp7e3t9fX1/f3+CgoKDg4OEhISGhoaJiYmKioqLi4uNjY2Pj4+RkZGSkpKTk5OVlZWWlpaXl5eampqcnJydnZ2enp6fn5+hoaGioqKlpaWmpqanp6eoqKitra2urq6vr6+wsLCxsbGysrKzs7O0tLS1tbW2tra5ubm6urq7u7u/v7/BwcHDw8PExMTFxcXHx8fIyMjJycnKysrLy8vMzMzNzc3Ozs7Q0NDR0dHS0tLT09PV1dXY2NjZ2dna2trc3Nzf39/m5ubq6urr6+vs7Ozt7e3u7u7v7+/w8PDy8vLz8/P19fX29vb39/f4+Pj5+fn6+vr7+/v8/Pz9/f3+/v7///+Q56D7AAACsklEQVQ4jcXV6VcSURgG8AdCMBEQUFBEhhkgt8AtM9OsLC0rNZfKNtu03bISSY3K9swybddSyTTNkjTS++f1DnSq0wez0NM9Z+Z+eea+v3Pvfc9gbPFGQzr6nJsWZy2wsMbccGi+2zGm66nVY8hVOuMNdF4Lb1Ua/+6aaO8PsG4MB9xmxkpdb+ANulaa0VeU5/dM/S9XGyTeoSN4VeYE+1xqVaK9RnTZ5XhcZNfgzs1zwZifnsndo0vqms5+GJzvrZ7d4mkFPAfU8K7i4TSlJQJWpx7PRFdbAQc0b7VWZ/R68mX9c6wXXUvompkcxbERxvbUl8Cvy80BcnJVkFp5QG4nl96hh4Ijl8xGLm2yEWjdH43l7qCre4X96Y2jjJ29/OmUeMYPvszv8i14VCc/QcKa48Mwm/Baw8WShFMCJjMQYSFEDBcDGC1yiAEoOT2wY0MUsLbMgoLWRqBpe9zBnrTCDlz1+e6jqnO+Ygvcr9umaVaTUIhEe9Rh8Bx0agdJjA4VwP26XxQgFwWgEgPxjuhQQLGtCti1WQcZl1+HdV3jzdDsGyj2h3mOtyrhbioOllWEykYvyGX84RIDsQ4t7aVNDmmGSwJ1ZipGgqs/f/m3rtkXLPD1Q937EjornSNclz7kioBUsABqhwFV7Z4T7FB2qrEu2LC1LX9yDU4wupyDDago2NmN8jxyaZfABZNDcx5i55Q3nnS3WHLLp9ilKz9dc+OMvRtgj/zs4+npt9f3njHUexWV9Rs1gCVZgwjbUrni7dQ5oivSbhIPWresIs1VKLroX5R58YI8KSfL5pNkrU8Bn24FolLoFStQWTMnhYynj2IEHZDAU1kLKZUCrRonKMUAufgEggva7wGOAtFCHGD4LUANa7LKIBEDKoE62sBTwyaRMpKPp6siaMRABJm+AT+iREzzEG0YAAAAAElFTkSuQmCC" alt="image"></div>
+<style>
+ .hmisctable716375 {
+ border: none;
+ font-size: 74%;
+ }
+ .hmisctable716375 td {
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable716375 th {
+ color: MidnightBlue;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: normal;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable716375">
+ <tbody><tr><th>n</th><th>missing</th><th>distinct</th><th>Info</th><th>Mean</th><th>pMedian</th><th>Gmd</th><th>.05</th><th>.10</th><th>.25</th><th>.50</th><th>.75</th><th>.90</th><th>.95</th></tr>
+ <tr><td>3000</td><td>0</td><td>3000</td><td>1</td><td>24.58</td><td>24.51</td><td>5.056</td><td>17.77</td><td>18.92</td><td>21.31</td><td>24.29</td><td>27.75</td><td>30.73</td><td>32.32</td></tr>
+ </tbody></table>
+
+<span style="font-size: 85%;"><font color="MidnightBlue">lowest</font>&nbsp;: 12.3804 12.6924 12.7617 12.9493 13.0841 ,  <font color="MidnightBlue">highest</font>: 34.8411 34.8549 34.8849 34.9141 34.9404</span>
+<hr class="thinhr">
+<span style="font-weight:bold">hf</span>
+<style>
+ .hmisctable934151 {
+ border: none;
+ font-size: 85%;
+ }
+ .hmisctable934151 td {
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable934151 th {
+ color: MidnightBlue;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: normal;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable934151">
+ <tbody><tr><th>n</th><th>missing</th><th>distinct</th><th>Info</th><th>Sum</th><th>Mean</th></tr>
+ <tr><td>3000</td><td>0</td><td>2</td><td>0.552</td><td>730</td><td>0.2433</td></tr>
+ </tbody></table>
+
+<hr class="thinhr">
+<span style="font-weight:bold">SES</span><div style="float: right; text-align: right;"><img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAABAAAAANCAMAAACXZR4WAAAATlBMVEUAAAALCwsMDAwNDQ0fHx8jIyM3Nzc7OztAQEBCQkJiYmJqampzc3OEhISmpqbBwcHIyMjLy8vZ2dna2trr6+vu7u7w8PD9/f3+/v7///9oQlIWAAAAVUlEQVQImWMQQQAmbiDBIAkB/PySksw8QAZMgJMTTYCDg3gBYQhgYxMWZuQCMkAqxMXgKkRZQQK8LHABIQaQAA8zXgE+CTQBBkERbiYREXZ2sF8EGADPXA6tsNE3eAAAAABJRU5ErkJggg==" alt="image"></div>
+<style>
+ .hmisctable665936 {
+ border: none;
+ font-size: 85%;
+ }
+ .hmisctable665936 td {
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable665936 th {
+ color: MidnightBlue;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: normal;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable665936">
+ <tbody><tr><th>n</th><th>missing</th><th>distinct</th><th>Info</th><th>Mean</th><th>pMedian</th><th>Gmd</th></tr>
+ <tr><td>3000</td><td>0</td><td>5</td><td>0.907</td><td>2.518</td><td>2.5</td><td>1.05</td></tr>
+ </tbody></table>
+
+<pre style="font-size:85%;"> Value          0     1     2     3     4
+ Frequency     61   386   948  1147   458
+ Proportion 0.020 0.129 0.316 0.382 0.153 </pre>
+
+<hr class="thinhr">
+<span style="font-weight:bold">bnp</span><div style="float: right; text-align: right;"><img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAAJcAAAANCAMAAACTvAxuAAABOFBMVEUAAAABAQECAgIDAwMEBAQGBgYHBwcJCQkKCgoLCwsMDAwNDQ0ODg4QEBATExMUFBQVFRUWFhYXFxcZGRkaGhobGxscHBwdHR0eHh4fHx8hISEjIyMkJCQlJSUnJycpKSkqKiosLCwwMDAyMjIzMzM3Nzc9PT1AQEBCQkJDQ0NERERHR0dJSUlLS0tMTExQUFBSUlJUVFRYWFhcXFxgYGBiYmJpaWlvb29wcHB2dnaEhISIiIiJiYmMjIyQkJCUlJSVlZWWlpaYmJiampqdnZ2goKCioqKlpaWpqam1tbW2tra6urq8vLy9vb3FxcXHx8fKysrOzs7Pz8/V1dXX19fa2trb29vg4ODh4eHn5+fo6Ojp6enq6urr6+vs7Ozu7u7y8vL19fX29vb39/f6+vr7+/v+/v7////ZfvYGAAABLElEQVQ4jc3Va0/CMBSA4dNtDsULojIVdYAi4l0RFRG8g+L9NhWhitu0//8feLYR0qkfTbr3w2mTZcmTpkmBYk1dG03SQAUMKykAOgtUrmtHAhjPv4m28DmuFw1dElyKtvA5risgjmtEtIWPcym7A++iOZ3AMIyq58KRfTQCEndeOJT0gSX6pLz8Lrz/Y+eiSW6/XECmN2qnNAiueZ/L3RVeb+/tD/xmfolzKT9dWAhIH5lZnuhZXN2uPVt1o2nVracWa9itBjOdP03mrZ2lnf35Ly58i/5y+YashAhRQSVylHTJpJuo4WRWGgpLscigFonJvZuHC+nhpUR86uIh0Z8rrqXmZqOTR/Qmc5e5psf6Hl052yq7715JrxSK3DuY329vTnI4Kus4ynEc3+flq5o6P0j7AAAAAElFTkSuQmCC" alt="image"></div>
+<style>
+ .hmisctable348161 {
+ border: none;
+ font-size: 85%;
+ }
+ .hmisctable348161 td {
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable348161 th {
+ color: MidnightBlue;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: normal;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable348161">
+ <tbody><tr><th>n</th><th>missing</th><th>distinct</th><th>Info</th><th>Mean</th><th>pMedian</th><th>Gmd</th><th>.05</th><th>.10</th><th>.25</th><th>.50</th><th>.75</th><th>.90</th><th>.95</th></tr>
+ <tr><td>3000</td><td>0</td><td>599</td><td>1</td><td>171.4</td><td>126</td><td>179.4</td><td> 19</td><td> 28</td><td> 52</td><td>104</td><td>202</td><td>383</td><td>577</td></tr>
+ </tbody></table>
+
+<span style="font-size: 85%;"><font color="MidnightBlue">lowest</font>&nbsp;:    2    3    4    5    6 ,  <font color="MidnightBlue">highest</font>: 1554 1739 1862 1934 2000</span>
+<hr class="thinhr">
+<span style="font-weight:bold">lvef</span><div style="float: right; text-align: right;"><img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAAJQAAAANCAMAAAB4i7dtAAAB7FBMVEUAAAABAQECAgIFBQUGBgYHBwcJCQkKCgoLCwsMDAwPDw8SEhIYGBgaGhocHBweHh4gICAhISEnJycpKSkqKiorKyssLCwuLi4wMDA1NTU3Nzc5OTk7Ozs8PDw9PT0+Pj5AQEBCQkJDQ0NGRkZKSkpMTExNTU1QUFBSUlJUVFRVVVVWVlZaWlpbW1tcXFxdXV1eXl5gYGBiYmJkZGRlZWVmZmZpaWlqampra2tsbGxtbW1wcHBzc3N0dHR2dnZ3d3d5eXl7e3t9fX1/f3+CgoKDg4OEhISFhYWGhoaIiIiKioqLi4uMjIyNjY2Ojo6QkJCRkZGSkpKTk5OUlJSVlZWWlpaXl5eYmJiampqbm5ucnJyfn5+goKChoaGioqKkpKSnp6epqamrq6usrKyurq6vr6+xsbGysrK0tLS1tbW2tra3t7e4uLi7u7u8vLy9vb2+vr7AwMDBwcHCwsLDw8PFxcXGxsbIyMjKysrMzMzNzc3Q0NDR0dHS0tLU1NTV1dXW1tbX19fY2NjZ2dna2trd3d3g4ODh4eHi4uLj4+Pk5OTl5eXm5ubn5+fo6Ojp6enq6urr6+vs7Ozt7e3u7u7v7+/w8PDx8fHz8/P09PT19fX29vb4+Pj5+fn6+vr7+/v8/Pz9/f3+/v7///+bsbrJAAACGUlEQVQ4jb3V21NSURgF8IUoWlwqNSwgr2hqhpZgXhIFSpNSym6GVMrV6IIoZYnHEk+CWNGurJRI5ftHg6mZnpoBTrpe9p79sOY362WDCY9O/uey8pZduJc534mvCCoECU+ngpLfaGCA1O2k6Mw8JDHy/dizwguFob7OUciURZ07RbW1VNWcRXU9yaDimNi5sUnbB416oUqOFqWMpVlUc9VfVKnxN2oZbq4o/OFiktgBoX4+pQnER5D8N4qDK4hZD5Zc4s97iX1HpRfSPkRyQ7kRtiN2V5LKB8UXkGk4xzEzhFA/OL2Eb5XxDeW8SsWXN/CyVl6i59AfwtAMxh/iwS34hjFnxFLAxi/4+MibHPrzWuryKgWSG9KXswi6wOWzlBVbJgn1HKXu+lyWylkUSmzj6nvcD8NdEGqwhAxyalFmuxKbglHRT3TmDpWZt2CNwS4Y1aUnzVlhKMslOtlOcgOVDP4nVF0NnThNBjv513JBrVA6Qq+0KfpB3ATd1tFNE9XUkbJlH1BHztNh495xZ9oap0h617mz+5zoI315lEUxlqj3rin9nDTwGIEp0eI1LF+XJnoOsTYF0yqZuppVNDFZByvui8IShi0IhwfeScyPgTNjvVeS/fsaK5lGwyobmVzHJL3rMHMYm8ekFx4HgjaELYj2FbMOGWuqYNVqptQyRRsr696A6TVGF0VTfninEXKIV4dFMcZ+AUAglyNAC4xwAAAAAElFTkSuQmCC" alt="image"></div>
+<style>
+ .hmisctable254487 {
+ border: none;
+ font-size: 85%;
+ }
+ .hmisctable254487 td {
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable254487 th {
+ color: MidnightBlue;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: normal;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable254487">
+ <tbody><tr><th>n</th><th>missing</th><th>distinct</th><th>Info</th><th>Mean</th><th>pMedian</th><th>Gmd</th><th>.05</th><th>.10</th><th>.25</th><th>.50</th><th>.75</th><th>.90</th><th>.95</th></tr>
+ <tr><td>3000</td><td>0</td><td>49</td><td>0.999</td><td>51.47</td><td>51.5</td><td>9.102</td><td>38</td><td>41</td><td>46</td><td>52</td><td>57</td><td>62</td><td>64</td></tr>
+ </tbody></table>
+
+<span style="font-size: 85%;"><font color="MidnightBlue">lowest</font>&nbsp;: 26 27 28 29 30 ,  <font color="MidnightBlue">highest</font>: 70 71 72 73 74</span>
+<hr class="thinhr">
+<span style="font-weight:bold">palpitation</span>
+<style>
+ .hmisctable769735 {
+ border: none;
+ font-size: 85%;
+ }
+ .hmisctable769735 td {
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable769735 th {
+ color: MidnightBlue;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: normal;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable769735">
+ <tbody><tr><th>n</th><th>missing</th><th>distinct</th><th>Info</th><th>Sum</th><th>Mean</th></tr>
+ <tr><td>3000</td><td>0</td><td>2</td><td>0.654</td><td>964</td><td>0.3213</td></tr>
+ </tbody></table>
+
+<hr class="thinhr">
+<span style="font-weight:bold">ca</span>
+<style>
+ .hmisctable405095 {
+ border: none;
+ font-size: 85%;
+ }
+ .hmisctable405095 td {
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable405095 th {
+ color: MidnightBlue;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: normal;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable405095">
+ <tbody><tr><th>n</th><th>missing</th><th>distinct</th><th>Info</th><th>Sum</th><th>Mean</th></tr>
+ <tr><td>3000</td><td>0</td><td>2</td><td>0.731</td><td>1259</td><td>0.4197</td></tr>
+ </tbody></table>
+
+<hr class="thinhr">
+<span style="font-weight:bold">bmi_risk</span><div style="float: right; text-align: right;"><img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAAJcAAAANCAMAAACTvAxuAAABHVBMVEUAAAACAgIFBQUGBgYHBwcKCgoNDQ0ODg4PDw8RERESEhITExMVFRUaGhocHBwdHR0eHh4fHx8gICAkJCQlJSUnJycoKCgqKiosLCwtLS0uLi4wMDAxMTEzMzM0NDQ1NTU2NjY3Nzc4ODg6Ojo7Ozs8PDw+Pj4/Pz9AQEBBQUFCQkJERERFRUVISEhLS0tMTExPT09RUVFTU1NUVFRYWFhZWVleXl5fX19hYWFjY2NmZmZoaGhvb29wcHB6enqBgYGDg4OEhISHh4eIiIiOjo6VlZWZmZmkpKSnp6epqamqqqqsrKyxsbG9vb3CwsLDw8PJycnPz8/Z2dna2tre3t7h4eHj4+Pk5OTn5+fp6enr6+vv7+/09PT39/f///9L9f6PAAAA3klEQVQ4jWOIiopito0adIAhLi6O2S5u0IFRd5EGRt1FGmAIDg5msg4edGDQhlfcqLtIAWB36YQNtDMwANhdDPzmNn6+QbHRMQPtHDhgANZFzAxAwMjCzsPGzMzEwcrJKyQgyM/NJcAnKi0pLMTLL8InJiErLSAmJiGqICMjJykuoSAjr6yhriQnJamgqqamLiclKydv4KKpoarioaBoHGWv6aYnL6dg5KrlZKGs6qVqEOnsYKWs4u9rGAG0ztQnUN/dBFQJhmgr6IZHOThHheoHRHlaOjmCq0ZvMyABAIs1pBOub9RVAAAAAElFTkSuQmCC" alt="image"></div>
+<pre style="font-size:85%;">        n  missing distinct     Info     Mean  pMedian      Gmd      .05      .10 
+     3000        0     2072     0.97     11.2    5.491    17.01    0.000    0.000 
+      .25      .50      .75      .90      .95 
+    0.000    1.565   13.620   37.015   52.282  </pre>
+
+<style>
+ .hmisctable362256 {
+ border: none;
+ font-size: 85%;
+ }
+ .hmisctable362256 td {
+ text-align: right;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable362256 th {
+ color: Black;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: bold;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable362256">
+ <tbody><tr><td><font color="MidnightBlue">lowest</font>&nbsp;:</td><td>0          </td><td>8.16699e-07</td><td>2.25786e-06</td><td>3.10292e-06</td><td>4.52202e-06</td></tr>
+ <tr><td><font color="MidnightBlue">highest</font>:</td><td>141.988    </td><td>145.22     </td><td>149.777    </td><td>151.478    </td><td>159.253    </td></tr>
+ </tbody></table>
+
+<hr class="thinhr">
+<span style="font-weight:bold">lvef_risk</span><div style="float: right; text-align: right;"><img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAAGoAAAANCAMAAAB2DgtHAAABL1BMVEUAAAABAQECAgIDAwMEBAQFBQUGBgYHBwcICAgKCgoLCwsMDAwQEBASEhIUFBQVFRUiIiIjIyMkJCQlJSUmJiYnJycoKCgqKiouLi4vLy8zMzM6Ojo9PT0+Pj4/Pz9BQUFFRUVHR0dLS0tNTU1PT09SUlJTU1NXV1dZWVlbW1tgYGBjY2NwcHBxcXFzc3N2dnZ3d3d7e3uDg4OEhISHh4eJiYmKioqMjIyNjY2QkJCRkZGSkpKTk5OZmZmfn5+np6eqqqqvr6+wsLC1tbW6urq/v7/CwsLDw8PExMTFxcXJycnKysrNzc3S0tLT09PU1NTV1dXZ2dna2trb29vc3Nzf39/h4eHk5OTl5eXn5+fo6Ojr6+vt7e3w8PD19fX29vb4+Pj5+fn7+/v8/Pz////I91+rAAAA3ElEQVQ4jWOI9mOwiKYLYEiJYLBNoQsYtWoIWRXkwWAURBdA5wDUFzPXsHQO4HGivVWMDMws3BxMDLKKQlY6oTG0syqEAQhYuNgYGCTEGJT4JLWlHe0i/eN8w6hvVTCqVSIaDIYM1uxmkpruArFeykkpNv4pKQ7RKSnJiUDlcQnoBsQTb1W0N8gqZk5WBgZxYQYFXkFVBl0GYwYDURUbBh8ThsBoFr3oEAbT6GgtGWA5Jq8OJOz4I4CkjRqoYHNl8QRR9lJRICpQ3BVc3LnIhYPpMHk3SPnnqhwRDQAAY+MO7USybQAAAABJRU5ErkJggg==" alt="image"></div>
+<style>
+ .hmisctable437084 {
+ border: none;
+ font-size: 74%;
+ }
+ .hmisctable437084 td {
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable437084 th {
+ color: MidnightBlue;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: normal;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable437084">
+ <tbody><tr><th>n</th><th>missing</th><th>distinct</th><th>Info</th><th>Mean</th><th>pMedian</th><th>Gmd</th><th>.05</th><th>.10</th><th>.25</th><th>.50</th><th>.75</th><th>.90</th><th>.95</th></tr>
+ <tr><td>3000</td><td>0</td><td>35</td><td>0.994</td><td>42.09</td><td>30.75</td><td>53.33</td><td>  0.0</td><td>  0.0</td><td>  2.7</td><td> 19.2</td><td> 58.8</td><td>108.3</td><td>149.2</td></tr>
+ </tbody></table>
+
+<span style="font-size: 85%;"><font color="MidnightBlue">lowest</font>&nbsp;: 0     0.3   1.2   2.7   4.8   ,  <font color="MidnightBlue">highest</font>: 370   409.3 451.2 495.7 542.8</span>
+<hr class="thinhr">
+<span style="font-weight:bold">treatment_effect</span><div style="float: right; text-align: right;"><img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAAJcAAAANCAMAAACTvAxuAAAA81BMVEUAAAABAQECAgIDAwMEBAQFBQUGBgYHBwcICAgKCgoODg4QEBARERESEhITExMVFRUbGxscHBwdHR0gICAiIiIjIyMkJCQqKiorKyssLCwuLi4wMDAzMzM2NjY6Ojo+Pj5BQUFHR0dJSUlKSkpRUVFUVFRfX19iYmJjY2NlZWVtbW1wcHBzc3N8fHyEhISFhYWIiIiNjY2RkZGSkpKVlZWbm5ucnJyioqKmpqaysrK+vr7CwsLExMTIyMjLy8vQ0NDR0dHY2Nja2trh4eHi4uLj4+Pl5eXm5ubo6Ojq6urr6+vx8fH39/f8/Pz9/f3+/v7///+1KBTZAAAA6UlEQVQ4jc3VWU/CQBSG4a8L2gqIUPaixYooq+y7sqkgAvb//xpLWIekhMyMie/FZK5OnpybgxlTPvTZBjgFi6Ue8M40wDE2V/Ofuu6AISfIUUyuigxkeUnIWFwLBUCGG4UII/raNguPDANORL+vmuZZuVSOSzqI2jUWsI6nZh/l2HLBvWFhyhe0icb19lryYFeVu2nVma75t/XZe8oNivmE/xpED8v5zx+47FuUahGnaWJEbs260TBfYjehywtZlFyiJIhwyiXIsqYEvGr0WddrwbAajF+lE9mve717/j38SHa231bKfn4BzrYsFzpqE24AAAAASUVORK5CYII=" alt="image"></div>
+<pre style="font-size:85%;">        n  missing distinct     Info     Mean  pMedian      Gmd      .05      .10 
+     3000        0     2978        1  -0.3532  -0.3062   0.3006  -0.9991  -0.7357 
+      .25      .50      .75      .90      .95 
+  -0.4465  -0.2656  -0.1726  -0.1311  -0.1050  </pre>
+
+<span style="font-size: 85%;"><font color="MidnightBlue">lowest</font>&nbsp;: -2.8444  -2.12661 -2.08305 -2.04394 -1.98645 ,  <font color="MidnightBlue">highest</font>: 0.967141 1.08998  1.1281   3.16208  3.65197 </span>
+<hr class="thinhr">
+<span style="font-weight:bold">p_outcome</span><div style="float: right; text-align: right;"><img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAAJcAAAANCAMAAACTvAxuAAABlVBMVEUAAAABAQECAgIDAwMEBAQFBQUGBgYHBwcICAgJCQkKCgoMDAwNDQ0ODg4PDw8QEBASEhITExMUFBQXFxcZGRkaGhobGxscHBwdHR0eHh4fHx8gICAhISEiIiIjIyMkJCQmJiYoKCgqKiorKyssLCwuLi4vLy8wMDAxMTEyMjIzMzM0NDQ1NTU2NjY3Nzc4ODg5OTk7Ozs8PDw/Pz9AQEBBQUFCQkJDQ0NERERFRUVGRkZISEhJSUlKSkpLS0tMTExOTk5PT09YWFhcXFxlZWVmZmZtbW12dnZ3d3eHh4eSkpKYmJiZmZmampqhoaGkpKSmpqasrKyurq6wsLCxsbGzs7O0tLS1tbW3t7e5ubm6urq7u7u8vLzAwMDBwcHFxcXHx8fIyMjNzc3Ozs7S0tLW1tbY2NjZ2dna2trb29ve3t7f39/g4ODh4eHi4uLj4+Pk5OTl5eXm5ubn5+fp6enr6+vs7Ozu7u7v7+/w8PDx8fHz8/P09PT29vb39/f4+Pj5+fn6+vr7+/v8/Pz9/f3+/v7////LQYZ3AAABS0lEQVQ4jWMoHWyA0w1EMrQNNsDlDiJH3UUsGHUXaQDqrozBBjhdQOSgDa+BdgYGGHUXKSDJBsld1ak+QX4ewVG+CemJcbEB/kEh4WExXsFpaUV5maEp+dk52dElNZUlbW2lda119a2NbY1NtfUNubllmaXFBW0NLfV5DfV1zY31jc2lbQ15tY3VEDtq4baVwxgtWRC6HoiqmipqqwuLqqsyimvqIpIjPQO9NV2dGDjd4kHuAtZFajb8DGpSDPJqDAJ6bIzaIgyKygzC2gyMeqJMWkoM0vosvAa8rIYqDPoWrJLWQrzWatyGRqwKpuzsRmLM2pp86lY8PBYyHOY6bDqmrMq2PFxmqhIWtpKqdryCjhqSVqYCWlYcas5aAvbGfJa2zPIO4nwO+mzGlhyyZjw8JlKMOpoMcqbcLLr8DKpyDFKqDBy6XEA3AQC2KZiGoLzOAQAAAABJRU5ErkJggg==" alt="image"></div>
+<pre style="font-size:85%;">        n  missing distinct     Info     Mean  pMedian      Gmd      .05      .10 
+     3000        0     2987        1   0.5995   0.5871   0.4067  0.04772  0.09123 
+      .25      .50      .75      .90      .95 
+  0.23158  0.64791  0.98443  0.99986  1.00000  </pre>
+
+<style>
+ .hmisctable641172 {
+ border: none;
+ font-size: 85%;
+ }
+ .hmisctable641172 td {
+ text-align: right;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable641172 th {
+ color: Black;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: bold;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable641172">
+ <tbody><tr><td><font color="MidnightBlue">lowest</font>&nbsp;:</td><td>0.00324604</td><td>0.00448875</td><td>0.00588282</td><td>0.00609575</td><td>0.0061005 </td></tr>
+ <tr><td><font color="MidnightBlue">highest</font>:</td><td>1         </td><td>1         </td><td>1         </td><td>1         </td><td>1         </td></tr>
+ </tbody></table>
+
+<hr class="thinhr">
+<span style="font-weight:bold">outcome</span>
+<style>
+ .hmisctable424697 {
+ border: none;
+ font-size: 85%;
+ }
+ .hmisctable424697 td {
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable424697 th {
+ color: MidnightBlue;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: normal;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable424697">
+ <tbody><tr><th>n</th><th>missing</th><th>distinct</th><th>Info</th><th>Sum</th><th>Mean</th></tr>
+ <tr><td>3000</td><td>0</td><td>2</td><td>0.724</td><td>1780</td><td>0.5933</td></tr>
+ </tbody></table>
+
+<hr class="thinhr">
+</div>
+</div>
+</section>
+<section id="シンプルな回帰モデルの解釈と問題点" class="slide level2">
+<h2>シンプルな回帰モデルの解釈と問題点</h2>
+<ul>
+<li>複数のパラメータを固定した上での目標としたパラメータを1単位変化した時の効果</li>
+<li>線形である事が条件</li>
+<li>連続値の扱い、Interaction term</li>
+<li>Model misspecificationの問題</li>
+</ul>
+</section>
+<section id="どうすればrobustになる" class="slide level2">
+<h2>どうすればRobustになる？</h2>
+<ul>
+<li>Propensity score (PS) analysis
+<ul>
+<li>PS match, PS weight
+<ul>
+<li>ATT, ATC, ATE, ATOなど</li>
+</ul></li>
+</ul></li>
+<li>アウトカムモデル + PS model
+<ul>
+<li>Doubly robust model
+<ul>
+<li>最も有名なものはAIPW</li>
+</ul></li>
+</ul></li>
+<li>PS modelを進化させる
+<ul>
+<li>PSをUpdateさせるTMLE</li>
+</ul></li>
+</ul>
+</section>
+<section id="matchingだと" class="slide level2">
+<h2>Matchingだと</h2>
+<ul>
+<li>一番有名なのはPropensity score matching</li>
+</ul>
+<div class="cell">
+<div class="cell-output-display">
+<!-- preamble start -->
+
+    <script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script>
+
+    <script>
+      // Create table-specific functions using external factory
+      const tableFns_aecljpisxd636l963eig = TinyTable.createTableFunctions("tinytable_aecljpisxd636l963eig");
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '12', j: 2 }, { i: '12', j: 3 } ], css_id: 'tinytable_css_ootpc0m4wead32j40pj8',}, 
+          { positions: [ { i: '4', j: 2 }, { i: '4', j: 3 } ], css_id: 'tinytable_css_oog60r91dikc05h1udkl',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '5', j: 2 }, { i: '6', j: 2 }, { i: '7', j: 2 }, { i: '8', j: 2 }, { i: '9', j: 2 }, { i: '10', j: 2 }, { i: '11', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '5', j: 3 }, { i: '6', j: 3 }, { i: '7', j: 3 }, { i: '8', j: 3 }, { i: '9', j: 3 }, { i: '10', j: 3 }, { i: '11', j: 3 } ], css_id: 'tinytable_css_nl9aj4ve0hema2d113ld',}, 
+          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 } ], css_id: 'tinytable_css_ca9omwr2opt84w5ffycw',}, 
+          { positions: [ { i: '12', j: 1 } ], css_id: 'tinytable_css_i86lvikarjdv8lvx7qua',}, 
+          { positions: [ { i: '4', j: 1 } ], css_id: 'tinytable_css_401lf0o25nhn8lkl7lzs',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '5', j: 1 }, { i: '6', j: 1 }, { i: '7', j: 1 }, { i: '8', j: 1 }, { i: '9', j: 1 }, { i: '10', j: 1 }, { i: '11', j: 1 } ], css_id: 'tinytable_css_4n246ut5b99k6be99a7m',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_kieimjbpa17h5eij6osz',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  tableFns_aecljpisxd636l963eig.styleCell(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
+    <style>
+    /* tinytable css entries after */
+    #tinytable_aecljpisxd636l963eig td.tinytable_css_ootpc0m4wead32j40pj8, #tinytable_aecljpisxd636l963eig th.tinytable_css_ootpc0m4wead32j40pj8 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_aecljpisxd636l963eig td.tinytable_css_oog60r91dikc05h1udkl, #tinytable_aecljpisxd636l963eig th.tinytable_css_oog60r91dikc05h1udkl {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_aecljpisxd636l963eig td.tinytable_css_nl9aj4ve0hema2d113ld, #tinytable_aecljpisxd636l963eig th.tinytable_css_nl9aj4ve0hema2d113ld { text-align: center }
+    #tinytable_aecljpisxd636l963eig td.tinytable_css_ca9omwr2opt84w5ffycw, #tinytable_aecljpisxd636l963eig th.tinytable_css_ca9omwr2opt84w5ffycw {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_aecljpisxd636l963eig td.tinytable_css_i86lvikarjdv8lvx7qua, #tinytable_aecljpisxd636l963eig th.tinytable_css_i86lvikarjdv8lvx7qua {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_aecljpisxd636l963eig td.tinytable_css_401lf0o25nhn8lkl7lzs, #tinytable_aecljpisxd636l963eig th.tinytable_css_401lf0o25nhn8lkl7lzs {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_aecljpisxd636l963eig td.tinytable_css_4n246ut5b99k6be99a7m, #tinytable_aecljpisxd636l963eig th.tinytable_css_4n246ut5b99k6be99a7m { text-align: left }
+    #tinytable_aecljpisxd636l963eig td.tinytable_css_kieimjbpa17h5eij6osz, #tinytable_aecljpisxd636l963eig th.tinytable_css_kieimjbpa17h5eij6osz {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    </style>
+    <div class="container">
+      <table class="tinytable" id="tinytable_aecljpisxd636l963eig" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+        
+        <thead>
+              <tr>
+                <th scope="col" data-row="0" data-col="1"> </th>
+                <th scope="col" data-row="0" data-col="2">PS match</th>
+                <th scope="col" data-row="0" data-col="3">PS weight</th>
+              </tr>
+        </thead>
+        
+        <tbody>
+                <tr>
+                  <td data-row="1" data-col="1">treat</td>
+                  <td data-row="1" data-col="2">1121.177 [-520.190, 2762.545]</td>
+                  <td data-row="1" data-col="3">532.110 [-2556.937, 3621.158]</td>
+                </tr>
+                <tr>
+                  <td data-row="2" data-col="1"></td>
+                  <td data-row="2" data-col="2">(837.448)</td>
+                  <td data-row="2" data-col="3">(1576.074)</td>
+                </tr>
+                <tr>
+                  <td data-row="3" data-col="1">(Intercept)</td>
+                  <td data-row="3" data-col="2"></td>
+                  <td data-row="3" data-col="3">6409.197 [5692.256, 7126.138]</td>
+                </tr>
+                <tr>
+                  <td data-row="4" data-col="1"></td>
+                  <td data-row="4" data-col="2"></td>
+                  <td data-row="4" data-col="3">(365.793)</td>
+                </tr>
+                <tr>
+                  <td data-row="5" data-col="1">Num.Obs.</td>
+                  <td data-row="5" data-col="2">370</td>
+                  <td data-row="5" data-col="3">614</td>
+                </tr>
+                <tr>
+                  <td data-row="6" data-col="1">R2</td>
+                  <td data-row="6" data-col="2">0.070</td>
+                  <td data-row="6" data-col="3"></td>
+                </tr>
+                <tr>
+                  <td data-row="7" data-col="1">R2 Adj.</td>
+                  <td data-row="7" data-col="2">0.025</td>
+                  <td data-row="7" data-col="3"></td>
+                </tr>
+                <tr>
+                  <td data-row="8" data-col="1">AIC</td>
+                  <td data-row="8" data-col="2">7614.9</td>
+                  <td data-row="8" data-col="3">20001.9</td>
+                </tr>
+                <tr>
+                  <td data-row="9" data-col="1">BIC</td>
+                  <td data-row="9" data-col="2">7689.3</td>
+                  <td data-row="9" data-col="3">20015.1</td>
+                </tr>
+                <tr>
+                  <td data-row="10" data-col="1">Log.Lik.</td>
+                  <td data-row="10" data-col="2">-3788.459</td>
+                  <td data-row="10" data-col="3">-9997.944</td>
+                </tr>
+                <tr>
+                  <td data-row="11" data-col="1">F</td>
+                  <td data-row="11" data-col="2">1.556</td>
+                  <td data-row="11" data-col="3">0.114</td>
+                </tr>
+                <tr>
+                  <td data-row="12" data-col="1">RMSE</td>
+                  <td data-row="12" data-col="2">6769.21</td>
+                  <td data-row="12" data-col="3">7481.49</td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+<!-- hack to avoid NA insertion in last line -->
+</div>
+</div>
+</section>
+<section id="augumented-inverse-probablity-weighting-aipw" class="slide level2">
+<h2>Augumented Inverse Probablity Weighting (AIPW)</h2>
+</section>
+<section id="それでもなお問題が残る" class="slide level2">
+<h2>それでもなお、問題が残る</h2>
+<ul>
+<li>アウトカムモデル、PS modelの両者がMisspecificationがあるとバイアスが残る <!-- Todo: Citationを入れる --></li>
+<li>Estimandの問題 = 治療効果の異質性
+<ul>
+<li>Subgroup解析と一緒</li>
+<li>自覚的にInteraction termを入れないとちゃんと推定出来ない</li>
+</ul></li>
+<li>ここに機械学習を持ち込めないか？</li>
+</ul>
+</section></section>
+<section>
+<section id="機械学習-at-glance" class="title-slide slide level1 center">
+<h1>機械学習 at glance</h1>
+
+</section>
+<section id="機械学習とは" class="slide level2">
+<h2>機械学習とは</h2>
+</section>
+<section id="代表的な機械学習" class="slide level2">
+<h2>代表的な機械学習</h2>
+<ul>
+<li>Logistic回帰</li>
+<li>tree-based model
+<ul>
+<li>Random forest</li>
+<li>XGBoost</li>
+</ul></li>
+<li>Neural network</li>
+</ul>
+</section>
+<section id="機械学習の強みと弱み" class="slide level2">
+<h2>機械学習の強みと弱み</h2>
+<ul>
+<li>データから関係性を柔軟に読み取る</li>
+<li>例えばTree based modelは相互作用を自然に扱うことが出来る</li>
+<li>ただし、以下の弱点には要注意
+<ul>
+<li>複雑なモデルはBlack boxになる</li>
+<li>Overfittingの問題</li>
+</ul></li>
+</ul>
+</section></section>
+<section>
+<section id="機械学習と因果推論の出会い" class="title-slide slide level1 center">
+<h1>機械学習と因果推論の出会い</h1>
+
+</section>
+<section id="因果推論における機械学習の役割" class="slide level2">
+<h2>因果推論における機械学習の役割</h2>
+<ul>
+<li>アウトカムモデル、PS modelを柔軟に扱う</li>
+<li>Interaction termを自然に扱える
+<ul>
+<li>HTEを自然に扱えないか？</li>
+</ul></li>
+</ul>
+</section>
+<section id="機械学習を用いた因果推論について" class="slide level2">
+<h2>機械学習を用いた因果推論について</h2>
+<ul>
+<li>大別してMeta learner系とCausal forest系に分けられる</li>
+<li>柔軟なモデル作成としてMeta learnerがあり、HTEに強いのがCausal forest</li>
+<li>とはいえ、Causal forestだけで良い気もする</li>
+</ul>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;econml.metalearners._metalearners.SLearner object at 0x7e48d419f020&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[-1530.55967406   369.38136095 -1198.06865549   -86.11625054
+  -833.38280696   171.70918773     0.           171.70918773
+   319.60055729  3232.14589762 -1326.64678003    62.06342827
+   973.47414377   503.67373985  -498.5500903   -128.93867654
+   485.25799913   489.9931725   1943.89516126  -269.05807531
+  2651.3162438    251.02443635 -3528.65968649  -591.89366066
+   436.53410022    32.09860508  -149.43314728   214.47455118
+   -86.11625054    32.09860508  3232.14589762    32.09860508
+   664.43858698   215.4353309   3451.76242614 -3558.48624607
+ -1148.88963224  2872.53054803   524.46483345  -544.94289508
+   632.3399819   -545.38598944  2651.3162438    144.60637046
+   -20.61071748    95.79529433   -86.11625054  -544.94289508
+   179.0257057  -2760.46335128  -957.9515668   1897.03733375
+   650.11851089   189.4222147     29.11044322   848.41449744
+  -352.45433824  2642.76190818 -1788.65634271  -988.00134014
+ -1198.06865549  3232.14589762  -522.42034513  -325.05097239
+    32.09860508  -167.70521158  2297.82108649    18.95269302
+ -1323.72233293   -35.38360418    74.66266901  -263.26905945
+  -289.37725534  3185.71468272  -122.99846869   -86.11625054
+  -128.93867654  1179.17631607 -2787.07045179  1789.97076026
+    32.09860508  -263.26905945  -843.00231034 -1539.13799559
+   125.67766335   425.69190007  2199.59715977 -2259.89874238
+  2651.3162438  -1539.13799559   261.5062125   -495.49910709
+ -1218.45302373 -1539.13799559  2297.82108649   278.45737341
+  1861.49985719   664.43858698    95.79529433  2420.81146399
+   903.14992197  -329.34261136   894.79147023   194.23270811
+ -1179.12813405   171.70918773   171.70918773 -1089.00156337
+   341.10564214   369.38136095  -591.89366066   -86.11625054
+ -1131.29106563  -410.70666473   -20.61071748  -591.89366066
+   207.64243233   -86.11625054   319.60055729  2063.90546808
+ -2635.07325719  -662.79260714   715.06165279]</code></pre>
+</div>
+</div>
+</section>
+<section id="scratch-for-s-learner" class="slide level2">
+<h2>Scratch for S-learner</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>モデルの学習を開始します...</code></pre>
+</div>
+<div class="cell-output-display">
+<style>#sk-container-id-1 {
+  /* Definition of color scheme common for light and dark mode */
+  --sklearn-color-text: #000;
+  --sklearn-color-text-muted: #666;
+  --sklearn-color-line: gray;
+  /* Definition of color scheme for unfitted estimators */
+  --sklearn-color-unfitted-level-0: #fff5e6;
+  --sklearn-color-unfitted-level-1: #f6e4d2;
+  --sklearn-color-unfitted-level-2: #ffe0b3;
+  --sklearn-color-unfitted-level-3: chocolate;
+  /* Definition of color scheme for fitted estimators */
+  --sklearn-color-fitted-level-0: #f0f8ff;
+  --sklearn-color-fitted-level-1: #d4ebff;
+  --sklearn-color-fitted-level-2: #b3dbfd;
+  --sklearn-color-fitted-level-3: cornflowerblue;
+
+  /* Specific color for light theme */
+  --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
+  --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, white)));
+  --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
+  --sklearn-color-icon: #696969;
+
+  @media (prefers-color-scheme: dark) {
+    /* Redefinition of color scheme for dark theme */
+    --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
+    --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, #111)));
+    --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
+    --sklearn-color-icon: #878787;
+  }
+}
+
+#sk-container-id-1 {
+  color: var(--sklearn-color-text);
+}
+
+#sk-container-id-1 pre {
+  padding: 0;
+}
+
+#sk-container-id-1 input.sk-hidden--visually {
+  border: 0;
+  clip: rect(1px 1px 1px 1px);
+  clip: rect(1px, 1px, 1px, 1px);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+#sk-container-id-1 div.sk-dashed-wrapped {
+  border: 1px dashed var(--sklearn-color-line);
+  margin: 0 0.4em 0.5em 0.4em;
+  box-sizing: border-box;
+  padding-bottom: 0.4em;
+  background-color: var(--sklearn-color-background);
+}
+
+#sk-container-id-1 div.sk-container {
+  /* jupyter's `normalize.less` sets `[hidden] { display: none; }`
+     but bootstrap.min.css set `[hidden] { display: none !important; }`
+     so we also need the `!important` here to be able to override the
+     default hidden behavior on the sphinx rendered scikit-learn.org.
+     See: https://github.com/scikit-learn/scikit-learn/issues/21755 */
+  display: inline-block !important;
+  position: relative;
+}
+
+#sk-container-id-1 div.sk-text-repr-fallback {
+  display: none;
+}
+
+div.sk-parallel-item,
+div.sk-serial,
+div.sk-item {
+  /* draw centered vertical line to link estimators */
+  background-image: linear-gradient(var(--sklearn-color-text-on-default-background), var(--sklearn-color-text-on-default-background));
+  background-size: 2px 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+/* Parallel-specific style estimator block */
+
+#sk-container-id-1 div.sk-parallel-item::after {
+  content: "";
+  width: 100%;
+  border-bottom: 2px solid var(--sklearn-color-text-on-default-background);
+  flex-grow: 1;
+}
+
+#sk-container-id-1 div.sk-parallel {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background-color: var(--sklearn-color-background);
+  position: relative;
+}
+
+#sk-container-id-1 div.sk-parallel-item {
+  display: flex;
+  flex-direction: column;
+}
+
+#sk-container-id-1 div.sk-parallel-item:first-child::after {
+  align-self: flex-end;
+  width: 50%;
+}
+
+#sk-container-id-1 div.sk-parallel-item:last-child::after {
+  align-self: flex-start;
+  width: 50%;
+}
+
+#sk-container-id-1 div.sk-parallel-item:only-child::after {
+  width: 0;
+}
+
+/* Serial-specific style estimator block */
+
+#sk-container-id-1 div.sk-serial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--sklearn-color-background);
+  padding-right: 1em;
+  padding-left: 1em;
+}
+
+
+/* Toggleable style: style used for estimator/Pipeline/ColumnTransformer box that is
+clickable and can be expanded/collapsed.
+- Pipeline and ColumnTransformer use this feature and define the default style
+- Estimators will overwrite some part of the style using the `sk-estimator` class
+*/
+
+/* Pipeline and ColumnTransformer style (default) */
+
+#sk-container-id-1 div.sk-toggleable {
+  /* Default theme specific background. It is overwritten whether we have a
+  specific estimator or a Pipeline/ColumnTransformer */
+  background-color: var(--sklearn-color-background);
+}
+
+/* Toggleable label */
+#sk-container-id-1 label.sk-toggleable__label {
+  cursor: pointer;
+  display: flex;
+  width: 100%;
+  margin-bottom: 0;
+  padding: 0.5em;
+  box-sizing: border-box;
+  text-align: center;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+
+#sk-container-id-1 label.sk-toggleable__label .caption {
+  font-size: 0.6rem;
+  font-weight: lighter;
+  color: var(--sklearn-color-text-muted);
+}
+
+#sk-container-id-1 label.sk-toggleable__label-arrow:before {
+  /* Arrow on the left of the label */
+  content: "▸";
+  float: left;
+  margin-right: 0.25em;
+  color: var(--sklearn-color-icon);
+}
+
+#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {
+  color: var(--sklearn-color-text);
+}
+
+/* Toggleable content - dropdown */
+
+#sk-container-id-1 div.sk-toggleable__content {
+  max-height: 0;
+  max-width: 0;
+  overflow: hidden;
+  text-align: left;
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-1 div.sk-toggleable__content.fitted {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+#sk-container-id-1 div.sk-toggleable__content pre {
+  margin: 0.2em;
+  border-radius: 0.25em;
+  color: var(--sklearn-color-text);
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-1 div.sk-toggleable__content.fitted pre {
+  /* unfitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {
+  /* Expand drop-down */
+  max-height: 200px;
+  max-width: 100%;
+  overflow: auto;
+}
+
+#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {
+  content: "▾";
+}
+
+/* Pipeline/ColumnTransformer-specific style */
+
+#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-1 div.sk-label.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Estimator-specific style */
+
+/* Colorize estimator box */
+#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-1 div.sk-estimator.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+#sk-container-id-1 div.sk-label label.sk-toggleable__label,
+#sk-container-id-1 div.sk-label label {
+  /* The background is the default theme color */
+  color: var(--sklearn-color-text-on-default-background);
+}
+
+/* On hover, darken the color of the background */
+#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+/* Label box, darken color on hover, fitted */
+#sk-container-id-1 div.sk-label.fitted:hover label.sk-toggleable__label.fitted {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Estimator label */
+
+#sk-container-id-1 div.sk-label label {
+  font-family: monospace;
+  font-weight: bold;
+  display: inline-block;
+  line-height: 1.2em;
+}
+
+#sk-container-id-1 div.sk-label-container {
+  text-align: center;
+}
+
+/* Estimator-specific */
+#sk-container-id-1 div.sk-estimator {
+  font-family: monospace;
+  border: 1px dotted var(--sklearn-color-border-box);
+  border-radius: 0.25em;
+  box-sizing: border-box;
+  margin-bottom: 0.5em;
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-1 div.sk-estimator.fitted {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+/* on hover */
+#sk-container-id-1 div.sk-estimator:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-1 div.sk-estimator.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Specification for estimator info (e.g. "i" and "?") */
+
+/* Common style for "i" and "?" */
+
+.sk-estimator-doc-link,
+a:link.sk-estimator-doc-link,
+a:visited.sk-estimator-doc-link {
+  float: right;
+  font-size: smaller;
+  line-height: 1em;
+  font-family: monospace;
+  background-color: var(--sklearn-color-background);
+  border-radius: 1em;
+  height: 1em;
+  width: 1em;
+  text-decoration: none !important;
+  margin-left: 0.5em;
+  text-align: center;
+  /* unfitted */
+  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+  color: var(--sklearn-color-unfitted-level-1);
+}
+
+.sk-estimator-doc-link.fitted,
+a:link.sk-estimator-doc-link.fitted,
+a:visited.sk-estimator-doc-link.fitted {
+  /* fitted */
+  border: var(--sklearn-color-fitted-level-1) 1pt solid;
+  color: var(--sklearn-color-fitted-level-1);
+}
+
+/* On hover */
+div.sk-estimator:hover .sk-estimator-doc-link:hover,
+.sk-estimator-doc-link:hover,
+div.sk-label-container:hover .sk-estimator-doc-link:hover,
+.sk-estimator-doc-link:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+div.sk-estimator.fitted:hover .sk-estimator-doc-link.fitted:hover,
+.sk-estimator-doc-link.fitted:hover,
+div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
+.sk-estimator-doc-link.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+/* Span, style for the box shown on hovering the info icon */
+.sk-estimator-doc-link span {
+  display: none;
+  z-index: 9999;
+  position: relative;
+  font-weight: normal;
+  right: .2ex;
+  padding: .5ex;
+  margin: .5ex;
+  width: min-content;
+  min-width: 20ex;
+  max-width: 50ex;
+  color: var(--sklearn-color-text);
+  box-shadow: 2pt 2pt 4pt #999;
+  /* unfitted */
+  background: var(--sklearn-color-unfitted-level-0);
+  border: .5pt solid var(--sklearn-color-unfitted-level-3);
+}
+
+.sk-estimator-doc-link.fitted span {
+  /* fitted */
+  background: var(--sklearn-color-fitted-level-0);
+  border: var(--sklearn-color-fitted-level-3);
+}
+
+.sk-estimator-doc-link:hover span {
+  display: block;
+}
+
+/* "?"-specific style due to the `<a>` HTML tag */
+
+#sk-container-id-1 a.estimator_doc_link {
+  float: right;
+  font-size: 1rem;
+  line-height: 1em;
+  font-family: monospace;
+  background-color: var(--sklearn-color-background);
+  border-radius: 1rem;
+  height: 1rem;
+  width: 1rem;
+  text-decoration: none;
+  /* unfitted */
+  color: var(--sklearn-color-unfitted-level-1);
+  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+}
+
+#sk-container-id-1 a.estimator_doc_link.fitted {
+  /* fitted */
+  border: var(--sklearn-color-fitted-level-1) 1pt solid;
+  color: var(--sklearn-color-fitted-level-1);
+}
+
+/* On hover */
+#sk-container-id-1 a.estimator_doc_link:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+#sk-container-id-1 a.estimator_doc_link.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-3);
+}
+</style><div id="sk-container-id-1" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>LGBMRegressor(random_state=42, verbosity=-1)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br>On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden=""><div class="sk-item"><div class="sk-estimator fitted sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-1" type="checkbox" checked=""><label for="sk-estimator-id-1" class="sk-toggleable__label fitted sk-toggleable__label-arrow"><div><div>LGBMRegressor</div></div><div><span class="sk-estimator-doc-link fitted">i<span>Fitted</span></span></div></label><div class="sk-toggleable__content fitted"><pre>LGBMRegressor(random_state=42, verbosity=-1)</pre></div> </div></div></div></div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>学習が完了しました。</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>テストデータのRMSE: 0.6124</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>平均処置効果の推定値: 749.0242</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   treat  age  married  educ  ...     effect_0  treat_1      effect_1  treat_e &gt;
+0      1   37        1    11  ...  2437.328621        1   6254.264565   3816.9 &gt;
+1      1   22        0     9  ...  5855.361897        1   6215.004201    359.6 &gt;
+2      1   30        0    12  ...  1654.736704        1   5863.334241   4208.5 &gt;
+3      1   27        0    11  ...  5778.341560        1  10567.286106   4788.9 &gt;
+4      1   33        0     8  ...   895.305362        1   3814.387914   2919.0 &gt;
+                                                                               &gt;
+                               [5 rows x 15 columns]                           &gt;
+
+&gt; ffect
+&gt; 35943
+&gt; 42304
+&gt; 97538
+&gt; 44546
+&gt; 82552
+&gt;      
+&gt;      </code></pre>
+</div>
+</div>
+</section>
+<section id="t-learner" class="slide level2">
+<h2>T learner</h2>
+
+<img data-src="figure_list/t-learner.drawio.svg" class="r-stretch quarto-figure-center"><p class="caption">t-learner</p></section>
+<section id="scratch-for-t-learner" class="slide level2">
+<h2>Scratch for T-learner</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;econml.metalearners._metalearners.TLearner object at 0x7e48d4453e60&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>T learnerでの局所治療効果</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[ -6650.98045077  -1118.6693171    7910.85611871  -4644.60006793
+  -5193.61671006  -1265.01628653  -1076.66778986  -1884.26404861
+   1564.51358604   6387.09977938 -17618.45105122  -3612.68936737
+    573.13368963  16200.95698813  -3859.86899084    336.54393078
+   2849.52966914   5133.3472875    4362.02429344  -4925.08721332
+  -3299.94537519 -13131.62022045 -12833.90437168  -8136.22119316
+   2871.03924138  -1936.90571189 -10729.46961207   -550.75806049
+  -4162.5337728  -16485.71427559   4827.58362554  -9824.65040004
+   8204.3069157    1938.90093947  11337.47819452  -3406.60012456
+  -3963.31021415   2860.03677434   6471.99906902  -6261.968898
+    917.83931442  -1937.86327265  13587.22837397   1821.31726953
+    865.44040096   2312.87813147    934.3501449  -16426.57428451
+    594.8779234    3585.2194147   -4277.95596726   2136.27681753
+   7125.14806731   2138.29716778  -3883.91378688  -5218.15875866
+  -7799.68434228   4075.03162163  -5429.40421769  -9084.61075982
+  -8857.81565801   5029.10118391  -9352.85425194   -267.04791813
+   9704.22887422  -4425.27599461   2037.97086778  -9330.43734666
+   3460.91088841   5143.14296934    706.29492043  -8247.97419454
+   -621.94188682   9497.28415412   7091.82273943  -4162.5337728
+   -365.05015182   4028.98226432   4498.00494588   4616.20332428
+  -4302.66307485   -831.07548236  -3761.67302329  -4863.79074393
+   2338.24688147   8510.37044263  -4976.29005251  -3629.85675494
+   7007.06944427  -5855.50651842   4731.59503049  -3063.50546107
+   -912.18517109 -15568.23504452   2641.3341303   -5453.70340661
+  10867.85011588   5753.16004211  -1456.64247255   3368.49826808
+  -3180.22245828   2500.74116673   4251.33460448  -1130.11883784
+   -803.66883908  -3089.84565141  -2072.82922894   1787.99070559
+  -1960.36916504   4389.53911275  -9042.29350198  -4162.5337728
+    117.86381757    730.53927385  -3415.59825     -4492.28134015
+  -5048.95189277  -4162.5337728    3750.17902964   2291.90717807
+   3355.0384531     589.82480352   2833.65279389]</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;econml.metalearners._metalearners.XLearner object at 0x7e48d403b440&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;econml.metalearners._metalearners.DomainAdaptationLearner object at 0x7e48d0b &gt;
+
+&gt; 0f140&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;econml.dr._drlearner.DRLearner object at 0x7e48d0b0c7a0&gt;</code></pre>
+</div>
+</div>
+</section>
+<section id="機械学習の因果推論における使い方" class="slide level2">
+<h2>機械学習の因果推論における使い方</h2>
+<ul>
+<li>交絡因子の調整で機械学習を用いる
+<ul>
+<li>AIPW, tlmeなど</li>
+</ul></li>
+<li>因果をダイレクトに推論する学習機を作る
+<ul>
+<li>Meta-learner</li>
+</ul></li>
+<li>CATEを測定する
+<ul>
+<li>Causal forestなど</li>
+</ul></li>
+</ul>
+</section>
+<section id="因果forest" class="slide level2">
+<h2>因果forest</h2>
+<ul>
+<li>HTEを計測するのに有名</li>
+<li>Ashey et al 2019</li>
+</ul>
+</section>
+<section id="survival-model" class="slide level2">
+<h2>Survival model</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>  id study      rx sex age obstruct perfor adhere nodes status differ extent
+1  1     1 Lev+5FU   1  43        0      0      0     5      1      2      3
+2  1     1 Lev+5FU   1  43        0      0      0     5      1      2      3
+3  2     1 Lev+5FU   1  63        0      0      0     1      0      2      3
+4  2     1 Lev+5FU   1  63        0      0      0     1      0      2      3
+5  3     1     Obs   0  71        0      0      1     7      1      2      2
+6  3     1     Obs   0  71        0      0      1     7      1      2      2
+  surg node4 time etype
+1    0     1 1521     2
+2    0     1  968     1
+3    0     0 3087     2
+4    0     0 3087     1
+5    0     1  963     2
+6    0     1  542     1</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        control   treated
+[1,]  -652.5676  652.5676
+[2,]   172.2679 -172.2679
+[3,]  -550.7890  550.7890
+[4,]  -560.7186  560.7186
+[5,]  -272.3796  272.3796
+[6,] -1438.5422 1438.5422</code></pre>
+</div>
+<div class="cell-output-display">
+<div class="grViz html-widget html-fill-item" id="htmlwidget-5fe65f3008d759b580df" style="width:960px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-5fe65f3008d759b580df">{"x":{"diagram":"digraph nodes { \n node [shape=box] ;\n0 [label=\" sex <= 0 \"] ;\n0 -> 1 [labeldistance=2.5, labelangle=45, headlabel=\"True\"];\n0 -> 2 [labeldistance=2.5, labelangle=-45, headlabel=\"False\"]\n1 [label=\" age <= 45 \"] ;\n1 -> 3  ;\n1 -> 4  ;\n3  [shape=box,style=filled,color=\".7 .3 1.0\" , label=\" Observation \"];\n4  [shape=box,style=filled,color=\".7 .3 1.0\" , label=\" Chemotherapy \"];\n2 [label=\" age <= 67 \"] ;\n2 -> 5  ;\n2 -> 6  ;\n5  [shape=box,style=filled,color=\".7 .3 1.0\" , label=\" Chemotherapy \"];\n6  [shape=box,style=filled,color=\".7 .3 1.0\" , label=\" Observation \"];\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+<!-- ![Treeplot](figure_list/treeplot.svg) -->
+
+</section></section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="mlcausal_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="mlcausal_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="mlcausal_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="mlcausal_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="mlcausal_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="mlcausal_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="mlcausal_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="mlcausal_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="mlcausal_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="mlcausal_files/libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'pdfMaxPagesPerSlide': 3,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1050,
+
+        height: 700,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    
+    <script>
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+      // slide changes (different for each slide format).
+      (function () {
+        // dispatch for htmlwidgets
+        function fireSlideEnter() {
+          const event = window.document.createEvent("Event");
+          event.initEvent("slideenter", true, true);
+          window.document.dispatchEvent(event);
+        }
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+          fireSlideEnter();
+
+          // dispatch for shiny
+          if (window.jQuery) {
+            if (previousSlide) {
+              window.jQuery(previousSlide).trigger("hidden");
+            }
+            if (currentSlide) {
+              window.jQuery(currentSlide).trigger("shown");
+            }
+          }
+        }
+
+        // hookup for slidy
+        if (window.w3c_slidy) {
+          window.w3c_slidy.add_observer(function (slide_num) {
+            // slide_num starts at position 1
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+          });
+        }
+
+      })();
+    </script>
+
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>
