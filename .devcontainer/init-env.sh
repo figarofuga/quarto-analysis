@@ -8,7 +8,7 @@ set -e
 echo ">>> 1. R Setup <<<"
 # CmdStanRのインストールとCmdStan本体のセットアップ
 # brms等のインストール (Linuxバイナリを使う設定になっているので高速です)
-Rscript -e "install.packages(c('jgd', 'DiagrammeR', 'DiagrammeRsvg', 'rsvg', 'reticulate', 'tidyverse', 'tidymodels', 'partykit', 'ranger', 'xgboost', 'censored', 'easystats', 'mlr3', 'mlr3learners', 'mlr3extralearners', 'mlr3proba', 'survivalmodels', 'here', 'data.table', 'modelsummary', 'broom', 'MatchIt', 'WeightIt', 'cobalt', 'highs', 'rootSolve', 'rms', 'Hmisc', 'marginaleffects', 'grf', 'policytree', 'SuperLearner', 'tmle', 'AIPW', 'DoubleML', 'survival', 'flexsurv', 'survtmle', 'ggdag', 'tinyplot', 'tinytable', 'dagitty', 'prodlim', 'riskRegression', 'Matrix', 'pseudo'))"
+Rscript -e "install.packages(c('httpgd', 'DiagrammeR', 'DiagrammeRsvg', 'rsvg', 'reticulate', 'tidyverse', 'tidymodels', 'partykit', 'ranger', 'xgboost', 'censored', 'easystats', 'mlr3', 'mlr3learners', 'mlr3extralearners', 'mlr3proba', 'survivalmodels', 'here', 'data.table', 'modelsummary', 'broom', 'MatchIt', 'WeightIt', 'cobalt', 'highs', 'rootSolve', 'rms', 'Hmisc', 'marginaleffects', 'grf', 'policytree', 'SuperLearner', 'tmle', 'AIPW', 'DoubleML', 'survival', 'flexsurv', 'survtmle', 'ggdag', 'tinyplot', 'tinytable', 'dagitty', 'prodlim', 'riskRegression', 'Matrix', 'pseudo'))"
 
 # -----------------------------------------------------------------------------
 # 2. Python Setup (uv & PyMC/Bambi)
@@ -61,13 +61,13 @@ Sys.setenv(RETICULATE_PYTHON = file.path(getwd(), ".venv", "bin", "python"))
 EOF
 fi
 
-if ! grep -q "jgd::jgd" .Rprofile; then
+if ! grep -q "vscode-R/init.R" .Rprofile; then
   cat >> .Rprofile <<'EOF'
 
 if (interactive() &&
     Sys.getenv("TERM_PROGRAM") == "vscode" &&
-    Sys.getenv("POSITRON") != "1") {
-  jgd::jgd()
+    Sys.getenv("RSTUDIO") == "") {
+  source(file.path(Sys.getenv("HOME"), ".vscode-R", "init.R"))
 }
 EOF
 fi
