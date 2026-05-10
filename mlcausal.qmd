@@ -88,18 +88,9 @@ tidy_dagitty(dag) |>
 
 ```
 
-## 通常の統計学的手法
-
-- 通常は交絡因子の調整により因果関係を推測する
 
 
-## 交絡因子の調整の方法
-
-- 回帰
-- Matching
-- 層別化
-
-## 例えば単純な回帰だと
+## 世界は結構複雑にできている {.scrollable}
 
 ```{r}
 #| label: Make-ToyData
@@ -356,7 +347,7 @@ outcome <- rbinom(n, size = 1, prob = p_outcome)
 # 9. Final dataset
 # ------------------------------------------------------------
 
-toy_data <- data.frame(
+toy_data <- tibble::tibble(
   age = age,
   sex = sex,
   bmi = bmi,
@@ -378,7 +369,6 @@ toy_data <- data.frame(
 # ------------------------------------------------------------
 
 print(head(toy_data))
-print(summary(toy_data))
 
 tidyr::pivot_longer(toy_data, cols = everything()) |> 
   ggplot(aes(x = value)) + 
@@ -631,7 +621,7 @@ ggplot() +
 
 ```
 
-## Data at glance
+## Simple regression
 
 ```{r}
 #| label: simple-regression
@@ -646,7 +636,14 @@ options(prType='html')
 dd <- rms::datadist(toy_data)
 options(datadist = "dd")
 
-Hmisc::describe(toy_data)
+simple_fit <- lrm(outcome ~ age + sex + bmi + hf + bnp + lvef + ca, data = toy_data)
+
+rcs_fit <- lrm(outcome ~ rcs(age, 4) + sex + rcs(bmi, 4) + hf + rcs(bnp, 4) + rcs(lvef, 4) + ca, data = toy_data)
+
+modelsummary::modelsummary(list(
+  simple = simple_fit, 
+  rcs = rcs_fit
+))
 
 ```
 

@@ -1,0 +1,10 @@
+# Quarto / reveal.js render artifacts
+.quarto/
+*_cache/
+*_files/
+*_freeze/
+*.knit.md
+*.utf8.md
+
+# R graphics fallback output
+Rplots.pdf
