@@ -102,6 +102,9 @@ tidy_dagitty(dag) |>
 
 # Required packages for DAG plot:
 # install.packages(c("dagitty", "ggdag", "ggplot2"))
+library(tinyplot)
+library(dplyr)
+library(simsurv)
 
 set.seed(123)
 
@@ -309,13 +312,13 @@ lvef_risk <-
 #    More negative = stronger risk reduction by CA.
 # ------------------------------------------------------------
 
-age_pos <- pmax(age - 65, 0) / 10
-bnp_pos <- log1p(bnp) / log1p(2000)
+age_risk <- pmax(age - 65, 0) / 10
+bnp_risk <- log1p(bnp) / log1p(2000)
 
 treatment_effect <- ifelse(
   sex == 1,
-  -0.30 - 0.90 * age_pos + 0.2 * bnp_pos + 0.1 * scale(bmi_risk) * scale(lvef_risk), 
-  -0.50 - 0.80 * age_pos + 0.2 * bnp_pos + 0.3 * scale(bmi_risk) * scale(lvef_risk)
+  -0.30 - 0.90 * age_risk + 0.2 * bnp_risk + 0.1 * scale(bmi_risk) * scale(lvef_risk), 
+  -0.50 - 0.80 * age_risk + 0.2 * bnp_risk + 0.3 * scale(bmi_risk) * scale(lvef_risk)
   )
 
 # ------------------------------------------------------------
@@ -369,7 +372,7 @@ afeqt_os <- rtruncnorm_simple(
 # 9. Final dataset
 # ------------------------------------------------------------
 
-toy_data <- tibble::tibble(
+full_toy_data <- tibble::tibble(
   age = age,
   sex = sex,
   bmi = bmi,
@@ -379,14 +382,24 @@ toy_data <- tibble::tibble(
   lvef = lvef, 
   palpitation = palpitation,
   ca = ca,
+  age_risk = age_risk, 
+  bnp_risk = bnp_risk,
   bmi_risk = bmi_risk,
   lvef_risk = lvef_risk,
   treatment_effect = treatment_effect, 
   p_outcome = p_outcome,
   outcome = outcome, 
   afeqt_os = afeqt_os
-)
+)  |> 
+dplyr::mutate(ca_trt = ca * treatment_effect)
 
+
+
+
+toy_data <- dplyr::select(
+  full_toy_data, 
+  age, sex, bmi, hf, bnp, lvef, palpitation, ca, outcome, afeqt_os
+)
 # ------------------------------------------------------------
 # 10. Quick checks
 # ------------------------------------------------------------
@@ -394,17 +407,17 @@ toy_data <- tibble::tibble(
 print(head(toy_data))
 
 tidyr::pivot_longer(toy_data, cols = everything()) |> 
-  ggplot(aes(x = value)) + 
-  geom_histogram() + 
-  facet_wrap(~name, scales = "free") + 
-  theme_bw()
+  tinyplot::plt( 
+  ~ value, facet = ~ name, facet.args = list(free = TRUE), 
+  data = _,
+  type = type_histogram(free = TRUE))
 
-dplyr::select(toy_data, bmi, lvef, treatment_effect) |> 
+
+
+dplyr::select(full_toy_data, age, bnp, bmi, lvef, treatment_effect) |> 
   tidyr::pivot_longer(cols = -treatment_effect) |> 
-  ggplot(aes(x = value, y = treatment_effect, colour = name)) + 
-  geom_smooth(method = "loess") + 
-  facet_wrap( ~ name, scales = "free") + 
-  theme_bw()
+  tinyplot::plt(treatment_effect ~ value, data = _, type = type_loess(), facet = ~ name, facet.args = list(free = TRUE)) 
+
 
 ```
 
