@@ -372,7 +372,7 @@ afeqt_os <- rtruncnorm_simple(
 # 9. Final dataset
 # ------------------------------------------------------------
 
-full_toy_data <- tibble::tibble(
+pre_toy_data <- tibble::tibble(
   age = age,
   sex = sex,
   bmi = bmi,
@@ -391,22 +391,38 @@ full_toy_data <- tibble::tibble(
   outcome = outcome, 
   afeqt_os = afeqt_os
 )  |> 
-dplyr::mutate(ca_trt = ca * treatment_effect)
+dplyr::mutate(
+  id = dplyr::row_number(), 
+  .before = age
+  )
 
+library(simsurv)
 
+surv_dat <- simsurv::simsurv(
+  dist = "weibull", 
+  lambdas = 0.08, 
+  gammas = 1.5,
+  x = full_toy_data, 
+  betas = c(p_outcome = 1), 
+  maxt = 5
+  )
 
+full_toy_data <- 
+  dplyr::left_join(
+  pre_toy_data, 
+  surv_dat, 
+  by = "id"
+  )
 
 toy_data <- dplyr::select(
   full_toy_data, 
-  age, sex, bmi, hf, bnp, lvef, palpitation, ca, outcome, afeqt_os
+  id, age, sex, bmi, hf, bnp, lvef, palpitation, ca, outcome, afeqt_os, eventtime, status
 )
 # ------------------------------------------------------------
 # 10. Quick checks
 # ------------------------------------------------------------
 
 print(head(toy_data))
-
-par(mfrow = c(2, 1))
 
 tidyr::pivot_longer(toy_data, cols = everything()) |> 
   tinyplot::plt( 
