@@ -406,6 +406,8 @@ toy_data <- dplyr::select(
 
 print(head(toy_data))
 
+par(mfrow = c(2, 1))
+
 tidyr::pivot_longer(toy_data, cols = everything()) |> 
   tinyplot::plt( 
   ~ value, facet = ~ name, facet.args = list(free = TRUE), 
