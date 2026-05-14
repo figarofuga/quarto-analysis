@@ -317,8 +317,8 @@ bnp_risk <- log1p(bnp) / log1p(2000)
 
 treatment_effect <- ifelse(
   sex == 1,
-  -0.30 - 0.90 * age_risk + 0.2 * bnp_risk + 0.1 * scale(bmi_risk) * scale(lvef_risk), 
-  -0.50 - 0.80 * age_risk + 0.2 * bnp_risk + 0.3 * scale(bmi_risk) * scale(lvef_risk)
+  -0.30 + 0.90 * age_risk + 0.2 + 0.3 * bnp_risk + 0.2 * scale(bmi_risk) * scale(lvef_risk), 
+  -0.50 + 0.80 * age_risk + 0.2 + 0.3 * bnp_risk + 0.4 * scale(bmi_risk) * scale(lvef_risk)
   )
 
 # ------------------------------------------------------------
@@ -402,7 +402,7 @@ surv_dat <- simsurv::simsurv(
   dist = "weibull", 
   lambdas = 0.08, 
   gammas = 1.5,
-  x = full_toy_data, 
+  x = pre_toy_data, 
   betas = c(p_outcome = 1), 
   maxt = 5
   )
