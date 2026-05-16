@@ -61,12 +61,15 @@ Sys.setenv(RETICULATE_PYTHON = file.path(getwd(), ".venv", "bin", "python"))
 EOF
 fi
 
-if ! grep -q "vscode-R/init.R" .Rprofile; then
+if ! grep -q '.vscode-R", "init.R"' .Rprofile; then
   cat >> .Rprofile <<'EOF'
 
 if (interactive() &&
     Sys.getenv("TERM_PROGRAM") == "vscode" &&
-    Sys.getenv("RSTUDIO") == "") {
+    Sys.getenv("RSTUDIO") == "" &&
+    file.exists(file.path(Sys.getenv("HOME"), ".vscode-R", "init.R")) &&
+    !isTRUE(getOption("vscode.R.init.loaded"))) {
+  options(vscode.R.init.loaded = TRUE)
   source(file.path(Sys.getenv("HOME"), ".vscode-R", "init.R"))
 }
 EOF
