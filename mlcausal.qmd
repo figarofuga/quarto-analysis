@@ -745,8 +745,9 @@ modelsummary::modelsummary(list(
 
 - 複数のパラメータを固定した上での目標としたパラメータを1単位変化した時の効果
 - 線形である事が条件
-- 連続値の扱い、Interaction term
-- Model misspecificationの問題
+- 複雑な関係性を捉えることが出来ない
+    - Model misspecificationの問題
+    - 治療の異質性を捉えられない
 
 ## どうすればRobustになる？
 
