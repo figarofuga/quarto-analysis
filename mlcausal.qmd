@@ -436,7 +436,7 @@ full_toy_data <-
 
 toy_data <- dplyr::select(
   full_toy_data,
-  id, age, sex, bmi, hf, bnp, lvef, palpitation, ca, outcome, afeqt_os, eventtime, status
+  id, age, sex, bmi, hf, bnp, lvef, palpitation, ca, bin_outcome, afeqt_os, eventtime, status
 )
 # ------------------------------------------------------------
 # 10. Quick checks
@@ -730,9 +730,9 @@ library(modelsummary)
 
 options(prType='html')
 
-simple_fit <- glm(outcome ~ age + sex + bmi + hf + bnp + lvef + ca, family = binomial, data = toy_data)
+simple_fit <- glm(bin_outcome ~ age + sex + bmi + hf + bnp + lvef + ca, family = binomial, data = toy_data)
 
-rcs_fit <- glm(outcome ~ rcs(age, 4) + sex + rcs(bmi, 4) + hf + rcs(bnp, 4) + rcs(lvef, 4) + ca, family = binomial, data = toy_data)
+rcs_fit <- glm(bin_outcome ~ rcs(age, 4) + sex + rcs(bmi, 4) + hf + rcs(bnp, 4) + rcs(lvef, 4) + ca, family = binomial, data = toy_data)
 
 modelsummary::modelsummary(list(
   simple = simple_fit,
