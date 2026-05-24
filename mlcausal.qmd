@@ -1,7 +1,7 @@
 ---
 title: "機械学習を用いた因果推論"
 author: "Nozomi Niimi"
-format: 
+format:
   revealjs:
     pdf-separate-fragments: false
     pdf-max-pages-per-slide: 3
@@ -153,19 +153,19 @@ sex <- rbinom(n, size = 1, prob = 0.60)
 
 
 age <- ifelse(
-  sex == 0, 
+  sex == 0,
   rtruncnorm_simple(
-    n = sum(sex == 0), 
-    mean = 65, 
-    sd = 8, 
-    lower = 20, 
+    n = sum(sex == 0),
+    mean = 65,
+    sd = 8,
+    lower = 20,
     upper = 99
-  ), 
+  ),
   rtruncnorm_simple(
-    n = sum(sex == 1), 
-    mean = 60, 
-    sd = 8, 
-    lower = 20, 
+    n = sum(sex == 1),
+    mean = 60,
+    sd = 8,
+    lower = 20,
     upper = 95
   )
 ) |> as.integer()
@@ -203,7 +203,7 @@ bmi_z <- as.numeric(scale(bmi))
 lvef_z <- as.numeric(scale(lvef))
 
 p_SES <- 0.625
-  
+
 SES <- rbinom(n, size = 4, prob = p_SES)
 
 SES_z <- as.numeric(scale(SES))
@@ -217,8 +217,8 @@ p_hf <- inv_logit(
   -1.5 +
     0.95 * age_z +
     0.15 * sex -
-    0.45 * bmi_z - 
-    0.3 * lvef_z + 
+    0.45 * bmi_z -
+    0.3 * lvef_z +
     0.2 * SES_z
 )
 
@@ -250,12 +250,12 @@ bnp <- bnp_base *
   exp(
     0.3 * age_z +
       0.10 * sex -
-      0.15 * bmi_z - 
-      0.4 * lvef_z 
+      0.15 * bmi_z -
+      0.4 * lvef_z
   )
 
 # Truncate again at 0 and 2000
-bnp <- pmin(pmax(bnp, 0), 2000) |> 
+bnp <- pmin(pmax(bnp, 0), 2000) |>
   as.integer()
 
 bnp_z <- as.numeric(scale(log1p(bnp)))
@@ -287,9 +287,9 @@ p_ca <- inv_logit(
     0.60 * sex +
     0.35 * bmi_z +
     0.75 * SES_z +
-    -0.85 * bnp_z + 
-    1.70 * palpitation - 
-    0.70 * lvef_z + 
+    -0.85 * bnp_z +
+    1.70 * palpitation -
+    0.70 * lvef_z +
     1.25 * hf
 )
 
@@ -309,9 +309,9 @@ bmi_risk <-
   pmax(25 - bmi, 0)^2 +
   0.3 * pmax(bmi - 30, 0)^2
 
-lvef_risk <- 
+lvef_risk <-
   pmax(40 - lvef, 0)^2 +
-  0.3 * pmax(60 - lvef, 0)^2 
+  0.3 * pmax(60 - lvef, 0)^2
 
 bmi_risk_z <- as.numeric(scale(bmi_risk))
 lvef_risk_z <- as.numeric(scale(lvef_risk))
@@ -336,7 +336,7 @@ bnp_risk <- log1p(bnp) / log1p(2000)
 
 treatment_effect <- ifelse(
   sex == 1,
-  -0.20 - 0.45 * age_risk - 0.55 * bnp_risk - 0.20 * bmi_risk_z - 0.25 * lvef_risk_z, 
+  -0.20 - 0.45 * age_risk - 0.55 * bnp_risk - 0.20 * bmi_risk_z - 0.25 * lvef_risk_z,
   -0.20 - 0.25 * age_risk - 0.55 * bnp_risk - 0.45 * bmi_risk_z - 0.25 * lvef_risk_z
   )
 
@@ -356,35 +356,35 @@ linear_predictor_outcome <-
   0.90 * hf +
   -0.85 * SES_z +
   0.55 * bnp_risk +
-  0.04 * bmi_risk + 
+  0.04 * bmi_risk +
   0.1 * lvef_risk +
   ca * treatment_effect
 
-p_outcome <- inv_logit(linear_predictor_outcome)
+p_bin_outcome <- inv_logit(linear_predictor_outcome)
 
-outcome <- rbinom(n, size = 1, prob = p_outcome)
+bin_outcome <- rbinom(n, size = 1, prob = p_bin_outcome)
 
 afeqt_mean <- (
   75 -
-  4 * age_z - 
-  7.0 * sex - 
+  4 * age_z -
+  7.0 * sex -
   2.0 * bmi_z -
-  8.0 * hf + 
-  3.0 * SES_z - 
-  5.0 * bnp_z + 
-  3.0 * lvef_z - 
-  10.0 * palpitation + 
+  8.0 * hf +
+  3.0 * SES_z -
+  5.0 * bnp_z +
+  3.0 * lvef_z -
+  10.0 * palpitation +
   6.0 * ca
 )
 
 afeqt_os <- rtruncnorm_simple(
-  n = n, 
-  mean = afeqt_mean, 
-  sd = 12, 
-  lower = 0, 
+  n = n,
+  mean = afeqt_mean,
+  sd = 12,
+  lower = 0,
   upper = 100
-) 
-  
+)
+
 
 # ------------------------------------------------------------
 # 9. Final dataset
@@ -397,45 +397,45 @@ pre_toy_data <- tibble::tibble(
   hf = hf,
   SES = SES,
   bnp = bnp,
-  lvef = lvef, 
+  lvef = lvef,
   palpitation = palpitation,
   p_ca = p_ca,
   ca = ca,
-  age_risk = age_risk, 
+  age_risk = age_risk,
   bnp_risk = bnp_risk,
   bmi_risk = bmi_risk,
   lvef_risk = lvef_risk,
-  treatment_effect = treatment_effect, 
+  treatment_effect = treatment_effect,
   linear_predictor_outcome = linear_predictor_outcome,
-  p_outcome = p_outcome,
-  outcome = outcome, 
+  p_bin_outcome = p_bin_outcome,
+  bin_outcome = bin_outcome,
   afeqt_os = afeqt_os
-)  |> 
+)  |>
 dplyr::mutate(
-  id = dplyr::row_number(), 
+  id = dplyr::row_number(),
   .before = age
   )
 
 library(simsurv)
 
 surv_dat <- simsurv::simsurv(
-  dist = "weibull", 
-  lambdas = 0.08, 
+  dist = "weibull",
+  lambdas = 0.08,
   gammas = 1.5,
-  x = pre_toy_data, 
-  betas = c(linear_predictor_outcome = 1), 
+  x = pre_toy_data,
+  betas = c(linear_predictor_outcome = 1),
   maxt = 5
   )
 
-full_toy_data <- 
+full_toy_data <-
   dplyr::left_join(
-  pre_toy_data, 
-  surv_dat, 
+  pre_toy_data,
+  surv_dat,
   by = "id"
   )
 
 toy_data <- dplyr::select(
-  full_toy_data, 
+  full_toy_data,
   id, age, sex, bmi, hf, bnp, lvef, palpitation, ca, outcome, afeqt_os, eventtime, status
 )
 # ------------------------------------------------------------
@@ -444,35 +444,36 @@ toy_data <- dplyr::select(
 
 print(head(toy_data))
 
-tidyr::pivot_longer(toy_data, cols = everything()) |> 
-  tinyplot::plt( 
-  ~ value, facet = ~ name, facet.args = list(free = TRUE), 
+tidyr::pivot_longer(toy_data, cols = everything()) |>
+  tinyplot::plt(
+  ~ value, facet = ~ name, facet.args = list(free = TRUE),
   data = _,
   type = type_histogram(free = TRUE))
 
 
 
-dplyr::select(full_toy_data, age, age_risk, bnp, bnp_risk, bmi, bmi_risk, lvef, lvef_risk) |> 
+dplyr::select(full_toy_data, age, age_risk, bnp, bnp_risk, bmi, bmi_risk, lvef, lvef_risk) |>
   dplyr::rename(
     age_rawdata = age,
     bnp_rawdata = bnp,
     bmi_rawdata = bmi,
     lvef_rawdata = lvef
-  ) |> 
+  ) |>
   tidyr::pivot_longer(
     cols = everything(),
     names_to = c("variable", ".value"),
     names_pattern = "^(age|bnp|bmi|lvef)_(rawdata|risk)$"
-  ) |> 
+  ) |>
   tinyplot::plt(
-    risk ~ rawdata, facet = ~ variable, 
-    facet.args = list(free = TRUE), 
-    data = _, 
+    risk ~ rawdata, facet = ~ variable,
+    facet.args = list(free = TRUE),
+    data = _,
     type = type_loess()
   )
 
 
 ```
+
 
 ```{r}
 #| label: DAG-for-ToyData
@@ -531,7 +532,7 @@ dag {
 
   HF -> CA
   HF -> Outcome
-  
+
   Palpitation -> CA
 
   CA -> Outcome
@@ -610,7 +611,7 @@ edge_df <- dag_df$data %>%
         dx = xend - x,
         dy = yend - y,
         dist = sqrt(dx^2 + dy^2),
-        
+
         # arrow head が node に隠れないように終点を少し手前にする
         shorten = 0.18,
         xend2 = xend - shorten * dx / dist,
@@ -632,7 +633,7 @@ ggplot() +
             type = "closed"
         )
     ) +
-    
+
     # downward curved arrows
     geom_curve(
         data = filter(edge_df, edge_type == "down"),
@@ -647,7 +648,7 @@ ggplot() +
             type = "closed"
         )
     ) +
-    
+
     # flat curved arrows except CA -> Outcome
     geom_curve(
         data = filter(edge_df, edge_type == "flat"),
@@ -662,7 +663,7 @@ ggplot() +
             type = "closed"
         )
     ) +
-    
+
     # CA -> Outcome only: straight arrow
     geom_segment(
         data = filter(edge_df, edge_type == "CA_to_Outcome"),
@@ -674,7 +675,7 @@ ggplot() +
             type = "closed"
         )
     ) +
-    
+
     # nodes
     geom_point(
         data = node_df,
@@ -683,13 +684,13 @@ ggplot() +
         color = "black",
         size = 18
     ) +
-    
+
     geom_text(
         data = node_df,
         aes(x = x, y = y, label = name),
         size = 3.8
     ) +
-    
+
     scale_fill_manual(
         values = c(
             "Confounder" = "#4C78A8",
@@ -698,7 +699,7 @@ ggplot() +
             "Outcome" = "#54A24B"
         )
     ) +
-    
+
     theme_dag() +
     labs(
         title = "DAG for Toy Causal Data",
@@ -706,8 +707,16 @@ ggplot() +
         fill = "Node type"
     )
 
-
 ```
+## Dataの説明
+
+- DAGは上記の通り
+- CAがメインのInterventionで解析をするアウトカムは3種類
+    - 連続値のAFEQT-OS
+    - 二値値のbin_outcome(短期の入院の有無など)
+    - 生存分析のeventtime, status(長期の心不全あるいは死亡)
+- ほとんどの因子は交絡因子だが、palpiationはinstrumental variable(CAには影響するが、outcomeには影響しない)
+- SESは観測されない交絡因子
 
 ## Simple regression
 
@@ -719,14 +728,14 @@ library(rms)
 library(easystats)
 library(modelsummary)
 
-options(prType='html') 
+options(prType='html')
 
 simple_fit <- glm(outcome ~ age + sex + bmi + hf + bnp + lvef + ca, family = binomial, data = toy_data)
 
 rcs_fit <- glm(outcome ~ rcs(age, 4) + sex + rcs(bmi, 4) + hf + rcs(bnp, 4) + rcs(lvef, 4) + ca, family = binomial, data = toy_data)
 
 modelsummary::modelsummary(list(
-  simple = simple_fit, 
+  simple = simple_fit,
   rcs = rcs_fit
 ))
 
@@ -769,18 +778,18 @@ m_dat <- MatchIt::match.data(mout)
 fit_match <- lm(re78 ~ treat * (age + educ + race + married + nodegree + re74 + re75), data = m_dat)
 
 match_res <- marginaleffects::avg_comparisons(
-  fit_match, 
-  variable = "treat", 
-  vcoc = ~subclass, 
+  fit_match,
+  variable = "treat",
+  vcoc = ~subclass,
   newdata = subset(treat == 1)
 )
 
 wout <- WeightIt::weightit(treat ~ age + educ + race + married + nodegree + re74 + re75, data = lalonde, method = "ipt")
 
 weight_res <- WeightIt::lm_weightit(
-  re78 ~ treat, 
-  data = lalonde, 
-  weightit = wout, 
+  re78 ~ treat,
+  data = lalonde,
+  weightit = wout,
   vcov = "HC0"
 )
 
@@ -788,16 +797,14 @@ options("modelsummary_factory_default" = "tinytable")
 
 modelsummary::modelsummary(
   models = list(
-    `PS match` = match_res, 
+    `PS match` = match_res,
     `PS weight` = weight_res
-    ), 
+    ),
   estimate = "{estimate} [{conf.low}, {conf.high}]"
 
 )
 
 ```
-
-
 
 ## Augumented Inverse Probablity Weighting (AIPW)
 
@@ -806,10 +813,10 @@ library(WeightIt)
 
 ps_fit <- glm(treat ~ age + educ + race + married + nodegree + re74 + re75, data = lalonde, family = binomial)
 
-ps_trimmed <- predict(ps_fit, type = "response") |> 
+ps_trimmed <- predict(ps_fit, type = "response") |>
   (\(x)dplyr::case_when(
-    x < 0.01 ~ 0.01, 
-    x > 0.99 ~ 0.99, 
+    x < 0.01 ~ 0.01,
+    x > 0.99 ~ 0.99,
     .default = x
   ))()
 
@@ -825,15 +832,15 @@ lalonde0 <- dplyr::mutate(
   lalonde, treat = 0
 )
 
-lalonde_aipw <- lalonde |> 
+lalonde_aipw <- lalonde |>
   dplyr::mutate(
     ps = ps_trimmed,
-    mu1 = predict(outcome_model, newdata = lalonde1), 
+    mu1 = predict(outcome_model, newdata = lalonde1),
     mu0 = predict(outcome_model, newdata = lalonde0)
-  ) |> 
+  ) |>
   dplyr::mutate(
 # 3. AIPW pseudo-outcome
-    phi1 = mu1 + treat/ps * (re78 - mu1), 
+    phi1 = mu1 + treat/ps * (re78 - mu1),
     phi0 = mu0 + (1 - treat) / (1 - ps) * (re78 - mu0)
   )
 
@@ -896,13 +903,13 @@ ci <- c(
 - 大別してMeta learner系とCausal forest系に分けられる
 - 柔軟なモデル作成としてMeta learnerがあり、HTEに強いのがCausal forest
 - とはいえ、Causal forestだけで良い気もする
-   
+
 ```{python}
 #| label: S-learner
 
 from econml.metalearners import SLearner
 import numpy as np
-import pandas as pd 
+import pandas as pd
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
 
@@ -912,10 +919,10 @@ T = lalonde['treat']
 n = lalonde.shape[0]
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X, 
-    y, 
-    test_size=0.2, 
-    random_state=42, 
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
     stratify=T
     )
 
@@ -968,7 +975,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 # 3. モデルの初期化 (scikit-learn API)
 # 引数を指定しない場合、デフォルトのハイパーパラメータが適用されます
 model = lgb.LGBMRegressor(
-  random_state=42, 
+  random_state=42,
   verbosity = -1)
 
 # 4. モデルの学習 (fit)
@@ -997,11 +1004,11 @@ X_s_learn = (
     .loc[:,["treat", "age", "married", "educ", "nodegree", "re74", "re75", "race_hispan", "race_white", "re78"]]
     .assign(
         treat_0 = 0,
-        effect_0 = pred_0, 
-        treat_1 = 1, 
+        effect_0 = pred_0,
+        treat_1 = 1,
         effect_1 = pred_1,
         treat_effect = pred_1 - pred_0
-    ) 
+    )
 )
 
 X_s_learn.head()
@@ -1025,7 +1032,7 @@ X_s_learn.head()
 
 from econml.metalearners import TLearner
 import numpy as np
-import pandas as pd 
+import pandas as pd
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
 
@@ -1035,10 +1042,10 @@ T = lalonde['treat']
 n = lalonde.shape[0]
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X, 
-    y, 
-    test_size=0.2, 
-    random_state=42, 
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
     stratify=T
     )
 
@@ -1078,10 +1085,10 @@ T = lalonde['treat']
 n = lalonde.shape[0]
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X, 
-    y, 
-    test_size=0.2, 
-    random_state=42, 
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
     stratify=T
     )
 
@@ -1165,20 +1172,20 @@ library(survival)
 library(grf)
 library(policytree)
 
-colon_prep <- survival::colon |> 
+colon_prep <- survival::colon |>
   dplyr::mutate(
     rx_bin = dplyr::if_else(rx == "Obs", 0, 1)
-  ) |> 
+  ) |>
   tidyr::drop_na()
 
 head(colon)
 
 survfit_grf <- grf::causal_survival_forest(
   X = colon_prep[, c("age", "sex", "obstruct", "perfor", "adhere", "nodes", "differ", "extent", "surg")],
-  Y = colon_prep$time, 
-  W = colon_prep$rx_bin, 
-  D = colon_prep$status, 
-  target = "RMST", 
+  Y = colon_prep$time,
+  W = colon_prep$rx_bin,
+  D = colon_prep$status,
+  target = "RMST",
   horizon = 365*5
   )
 
@@ -1187,8 +1194,8 @@ Gamma.matrix <- double_robust_scores(survfit_grf)
 head(Gamma.matrix)
 
 surv_tree <- policytree::policy_tree(
-  colon_prep[, c("age", "sex", "obstruct", "perfor", "adhere", "nodes", "differ", "extent", "surg")], 
-  Gamma.matrix, 
+  colon_prep[, c("age", "sex", "obstruct", "perfor", "adhere", "nodes", "differ", "extent", "surg")],
+  Gamma.matrix,
   depth = 2
 )
 
