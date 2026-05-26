@@ -728,11 +728,12 @@ library(rms)
 library(easystats)
 library(modelsummary)
 
-options(prType='html')
+dd <- rms::datadist(toy_data)
+options(datadist = "dd")
 
-simple_fit <- glm(bin_outcome ~ age + sex + bmi + hf + bnp + lvef + ca, family = binomial, data = toy_data)
+simple_fit <- lm(afeqt_os ~ age + sex + bmi + hf + bnp + lvef + ca, data = toy_data)
 
-rcs_fit <- glm(bin_outcome ~ rcs(age, 4) + sex + rcs(bmi, 4) + hf + rcs(bnp, 4) + rcs(lvef, 4) + ca, family = binomial, data = toy_data)
+rcs_fit <- lm(afeqt_os ~ rcs(age, 4) + sex + rcs(bmi, 4) + hf + rcs(bnp, 4) + rcs(lvef, 4) + ca, data = toy_data)
 
 modelsummary::modelsummary(list(
   simple = simple_fit,
@@ -741,6 +742,7 @@ modelsummary::modelsummary(list(
 
 ```
 
+
 ## シンプルな回帰モデルの解釈と問題点
 
 - 複数のパラメータを固定した上での目標としたパラメータを1単位変化した時の効果
@@ -748,6 +750,20 @@ modelsummary::modelsummary(list(
 - 複雑な関係性を捉えることが出来ない
     - Model misspecificationの問題
     - 治療の異質性を捉えられない
+
+## 例えば
+
+```{r}
+
+marginaleffects::plot_predictions(
+  simple_fit, 
+  condition = "bmi")
+
+marginaleffects::plot_predictions(
+  rcs_fit,
+  condition = "bmi")
+
+```
 
 ## どうすればRobustになる？
 
@@ -772,24 +788,24 @@ library(WeightIt)
 library(marginaleffects)
 library(modelsummary)
 
-mout <- MatchIt::matchit(treat ~ age + educ + race + married + nodegree + re74 + re75, data = lalonde)
+mout <- MatchIt::matchit(ca ~ age + sex + bmi + hf + bnp + lvef, data = toy_data)
 
 m_dat <- MatchIt::match.data(mout)
 
-fit_match <- lm(re78 ~ treat * (age + educ + race + married + nodegree + re74 + re75), data = m_dat)
+fit_match <- glm(afeqt_os ~ ca * (age + sex + bmi + hf + bnp + lvef), data = m_dat)
 
 match_res <- marginaleffects::avg_comparisons(
   fit_match,
-  variable = "treat",
+  variable = "ca",
   vcoc = ~subclass,
-  newdata = subset(treat == 1)
+  newdata = subset(ca == 1)
 )
 
-wout <- WeightIt::weightit(treat ~ age + educ + race + married + nodegree + re74 + re75, data = lalonde, method = "ipt")
+wout <- WeightIt::weightit(ca ~ age + sex + bmi + hf + bnp + lvef, data = toy_data, method = "ipt")
 
 weight_res <- WeightIt::lm_weightit(
-  re78 ~ treat,
-  data = lalonde,
+  afeqt_os ~ ca,
+  data = toy_data,
   weightit = wout,
   vcov = "HC0"
 )
@@ -812,7 +828,7 @@ modelsummary::modelsummary(
 ```{r}
 library(WeightIt)
 
-ps_fit <- glm(treat ~ age + educ + race + married + nodegree + re74 + re75, data = lalonde, family = binomial)
+ps_fit <- glm(ca ~ age + sex + bmi + hf + bnp + lvef, data = toy_data, family = binomial)
 
 ps_trimmed <- predict(ps_fit, type = "response") |>
   (\(x)dplyr::case_when(
@@ -821,32 +837,32 @@ ps_trimmed <- predict(ps_fit, type = "response") |>
     .default = x
   ))()
 
-outcome_model <- glm(re78 ~ treat * (age + educ + race + married + nodegree + re74 + re75), data = lalonde, family = gaussian)
+outcome_model <- glm(afeqt_os ~ ca * (age + sex + bmi + hf + bnp + lvef), data = toy_data, family = gaussian)
 
 # 全員治療された場合
-lalonde1 <- dplyr::mutate(
-  lalonde, treat = 1
+toy_data1 <- dplyr::mutate(
+  toy_data, ca = 1
 )
 
 # 全員非治療だった場合
-lalonde0 <- dplyr::mutate(
-  lalonde, treat = 0
+toy_data0 <- dplyr::mutate(
+  toy_data, ca = 0
 )
 
-lalonde_aipw <- lalonde |>
+toy_data_aipw <- toy_data |>
   dplyr::mutate(
     ps = ps_trimmed,
-    mu1 = predict(outcome_model, newdata = lalonde1),
-    mu0 = predict(outcome_model, newdata = lalonde0)
+    mu1 = predict(outcome_model, newdata = toy_data1),
+    mu0 = predict(outcome_model, newdata = toy_data0)
   ) |>
   dplyr::mutate(
 # 3. AIPW pseudo-outcome
-    phi1 = mu1 + treat/ps * (re78 - mu1),
-    phi0 = mu0 + (1 - treat) / (1 - ps) * (re78 - mu0)
+    phi1 = mu1 + ca/ps * (afeqt_os - mu1),
+    phi0 = mu0 + (1 - ca) / (1 - ps) * (afeqt_os - mu0)
   )
 
 # 4. ATE
-psi <- lalonde_aipw$phi1 - lalonde_aipw$phi0
+psi <- toy_data_aipw$phi1 - toy_data_aipw$phi0
 ate_aipw <- mean(psi)
 se <- sd(psi) / sqrt(length(psi))
 
@@ -882,12 +898,12 @@ ci <- c(
   - XGBoost
 - Neural network
 
-
 ## 機械学習の強みと弱み
 
-- データから関係性を柔軟に読み取る
-- 例えばTree based modelは相互作用を自然に扱うことが出来る
-- ただし、以下の弱点には要注意
+- Pros
+  - データから関係性を柔軟に読み取る
+  - 例えばTree based modelは相互作用を自然に扱うことが出来る
+- Cons
   - 複雑なモデルはBlack boxになる
   - Overfittingの問題
 
@@ -914,10 +930,11 @@ import pandas as pd
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
 
-X = lalonde.loc[:,["age", "married", "educ", "nodegree", "re74", "re75", "race_hispan", "race_white"]]
-y = lalonde['re78']
-T = lalonde['treat']
-n = lalonde.shape[0]
+
+X = toy_data.loc[:,["age", "sex", "bmi", "hf", "bnp", "lvef"]]
+y = toy_data['afeqt_os']
+T = toy_data['ca']
+n = toy_data.shape[0]
 
 X_train, X_test, y_train, y_test = train_test_split(
     X,
@@ -955,17 +972,11 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import root_mean_squared_error
 
-
-
-lalonde = (
-    pd.read_csv("rawdata/lalonde.csv")
-    .pipe(pd.get_dummies, columns=["race"], drop_first=True, dtype=int)
-)
 # 1. データセットの読み込み
 # ここでは例としてscikit-learnの乳がんデータセットを使用します
-X = lalonde.loc[:,["treat", "age", "married", "educ", "nodegree", "re74", "re75", "race_hispan", "race_white"]]
-y = lalonde['re78']
-n = lalonde.shape[0]
+X = toy_data.loc[:,["age", "sex", "bmi", "hf", "bnp", "lvef"]]
+y = toy_data['afeqt_os']
+n = toy_data.shape[0]
 
 
 # 2. データを学習用（80%）とテスト用（20%）に分割
@@ -994,21 +1005,21 @@ rmse = root_mean_squared_error(y_true, y_pred)
 print(f"テストデータのRMSE: {rmse:.4f}")
 
 
-pred_0 = model.predict(X.assign(treat = 0))
-pred_1 = model.predict(X.assign(treat = 1))
+pred_0 = model.predict(X.assign(ca = 0))
+pred_1 = model.predict(X.assign(ca = 1))
 te = np.mean(pred_1 - pred_0)
 
 print(f"平均処置効果の推定値: {te:.4f}")
 
 X_s_learn = (
-    lalonde
-    .loc[:,["treat", "age", "married", "educ", "nodegree", "re74", "re75", "race_hispan", "race_white", "re78"]]
+    toy_data
+    .loc[:,["age", "sex", "bmi", "hf", "bnp", "lvef", "afeqt_os"]]
     .assign(
-        treat_0 = 0,
+        ca_0 = 0,
         effect_0 = pred_0,
-        treat_1 = 1,
+        ca_1 = 1,
         effect_1 = pred_1,
-        treat_effect = pred_1 - pred_0
+        ca_effect = pred_1 - pred_0
     )
 )
 
@@ -1037,10 +1048,10 @@ import pandas as pd
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
 
-X = lalonde.loc[:,["age", "married", "educ", "nodegree", "re74", "re75", "race_hispan", "race_white"]]
-y = lalonde['re78']
-T = lalonde['treat']
-n = lalonde.shape[0]
+X = toy_data.loc[:,["age", "sex", "bmi", "hf", "bnp", "lvef"]]
+y = toy_data['afeqt_os']
+T = toy_data['ca']
+n = toy_data.shape[0]
 
 X_train, X_test, y_train, y_test = train_test_split(
     X,
@@ -1080,10 +1091,10 @@ from numpy.random import binomial, multivariate_normal, normal, uniform
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
 
-X = lalonde.loc[:,["age", "married", "educ", "nodegree", "re74", "re75", "race_hispan", "race_white"]]
-y = lalonde['re78']
-T = lalonde['treat']
-n = lalonde.shape[0]
+X = toy_data.loc[:,["age", "sex", "bmi", "hf", "bnp", "lvef"]]
+y = toy_data['afeqt_os']
+T = toy_data['ca']
+n = toy_data.shape[0]
 
 X_train, X_test, y_train, y_test = train_test_split(
     X,
@@ -1155,11 +1166,11 @@ DR_te = DR_learner.effect(X_test)
 library(rms)
 library(Hmisc)
 
-dd <- datadist(full_toy_data)
+dd <- datadist(toy_data)
 
 options(datadist = "dd")
 
-simple_surv_fit <- npsurv(Surv(eventtime, status) ~ ca, data = full_toy_data)
+simple_surv_fit <- npsurv(Surv(eventtime, status) ~ ca, data = toy_data)
 
 survplot(simple_surv_fit)
 
@@ -1173,19 +1184,12 @@ library(survival)
 library(grf)
 library(policytree)
 
-colon_prep <- survival::colon |>
-  dplyr::mutate(
-    rx_bin = dplyr::if_else(rx == "Obs", 0, 1)
-  ) |>
-  tidyr::drop_na()
-
-head(colon)
 
 survfit_grf <- grf::causal_survival_forest(
-  X = colon_prep[, c("age", "sex", "obstruct", "perfor", "adhere", "nodes", "differ", "extent", "surg")],
-  Y = colon_prep$time,
-  W = colon_prep$rx_bin,
-  D = colon_prep$status,
+  X = toy_data[, c("age", "sex", "bmi", "hf", "bnp", "lvef")],
+  Y = toy_data$eventtime,
+  W = toy_data$ca,
+  D = toy_data$status,
   target = "RMST",
   horizon = 365*5
   )
@@ -1195,7 +1199,7 @@ Gamma.matrix <- double_robust_scores(survfit_grf)
 head(Gamma.matrix)
 
 surv_tree <- policytree::policy_tree(
-  colon_prep[, c("age", "sex", "obstruct", "perfor", "adhere", "nodes", "differ", "extent", "surg")],
+  toy_data[, c("age", "sex", "bmi", "hf", "bnp", "lvef")],
   Gamma.matrix,
   depth = 2
 )
@@ -1205,7 +1209,7 @@ surv_tree <- policytree::policy_tree(
 # base plot は knitr が各出力形式向けに自動処理する
 
 
-plot(surv_tree, leaf.labels = c("Observation", "Chemotherapy"))
+plot(surv_tree, leaf.labels = c("Observation", "Catheter ablation"))
 # cat(DiagrammeRsvg::export_svg(surv_tree_plot), file = here::here("figure_list", 'treeplot.svg'))
 
 ```
