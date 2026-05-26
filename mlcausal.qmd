@@ -930,6 +930,7 @@ import pandas as pd
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
 
+toy_data = r.toy_data
 
 X = toy_data.loc[:,["age", "sex", "bmi", "hf", "bnp", "lvef"]]
 y = toy_data['afeqt_os']
@@ -973,7 +974,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import root_mean_squared_error
 
 # 1. データセットの読み込み
-# ここでは例としてscikit-learnの乳がんデータセットを使用します
+
+
 X = toy_data.loc[:,["age", "sex", "bmi", "hf", "bnp", "lvef"]]
 y = toy_data['afeqt_os']
 n = toy_data.shape[0]
