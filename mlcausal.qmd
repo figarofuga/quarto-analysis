@@ -37,6 +37,28 @@ date-format: long
 ## DAGの基本
 
 ```{r}
+#| label: setup
+
+library(sessioninfo)
+library(reticulate)
+
+
+library(dagitty)
+library(ggdag)
+library(dplyr)
+library(ggplot2)
+library(grid)
+
+Sys.setenv(RETICULATE_PYTHON="managed")
+
+reticulate::py_require(packages = c("numpy", "pandas", "matplotlib", "seaborn", "scikit-learn", "lightgbm", "xgboost", "causallib", "econml", "causal-learn", "causalml", "dowhy", "doubleml", "scikit-survival"))
+
+
+sessioninfo::session_info(info = "all")
+
+```
+
+```{r}
 #| label: DAG
 #| fig-width: 10
 #| fig-height: 4
@@ -962,16 +984,11 @@ print(S_te)
 
 ## Scratch for S-learner
 
-```{python}
+```{r}
 #| label: scratch-for-S-learner
 
-
-import numpy as np
-import pandas as pd
-import lightgbm as lgb
-from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import root_mean_squared_error
+library(tidymodels)
+library(bonsai)
 
 # 1. データセットの読み込み
 
@@ -1216,3 +1233,8 @@ plot(surv_tree, leaf.labels = c("Observation", "Catheter ablation"))
 
 ```
 <!-- ![Treeplot](figure_list/treeplot.svg) -->
+
+```{r}
+library(sessioninfo)
+sessioninfo::session_info(info = "all")
+```
